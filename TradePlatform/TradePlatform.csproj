@@ -157,7 +157,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="AFL\" />
     <Folder Include="Logs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
