@@ -1,0 +1,227 @@
+// ***********************************************************************
+//	Financial Data Mining, Spring 2019
+//	
+//  Author: Ha Vu
+//	Last Updated: 02/24/2019
+// 
+// This model generates a buy rule using a RSI Divergence model.
+// Describe performance profit (just profit). 
+// Assume you start with 100K
+// This model does both long and short trades
+// It was applied to the 2001 to 2003 S&P Emini Data set (5 minutes) and generated 239,741.40 dollars in profit
+// It was applied to the 2018 S&P Emini Data set (5 minutes) and generated 177,875.40 dollars in profit
+// ***********************************************************************
+/*
+Modification history.
+3/13/2019	Created
+3/20/2019	Revisioned added plot
+4/10/2019   Change RSI to Ultimate indicator
+4/17/2019   Optimzied RSI 
+*/
+
+
+//*************************Here are the time constraints*****************************************
+
+//START Determining acceptable trading hours for GDB Cup.
+isAfterMarketOpen = TimeNum() >= 082459;	//Triggers start at 8:25, first trade at 8:30.
+                                        // This assumes that you are using 5-minute data
+                                        // 082459 = 8 hours (8 AM), 24 minutes, and 59 seconds
+isBeforeTradeClose = TimeNum() <= 143459;	//Last buy trigger no later than 2:35.
+                                            // This assumes that you are using 5-minute data
+                                            // 143459 = 14 hours (2 PM), 34 minutes, and 59 seconds                                            
+isEndOfDayExit = TimeNum() >= 150459;	// Trigger exit at 3:05 to sell before market close.
+                                        // This assumes that you are using 5-minute data
+                                        // 150459 = 15 hours (3 PM), 4 minutes, and 59 seconds
+isBuyHours = isAfterMarketOpen AND isBeforeTradeClose;
+//END Determining acceptable trading hours.
+
+InitialEquity = 100000; // Assume we start with 100 thousand dollars in equity
+MarginDeposit = 2875;    // For every 500 dollars in your account, you can buy 1 contract
+PointValue = 50;        // 1 point movement is a 50 gain (or loss)
+
+SetTradeDelays( 1, 1, 1, 1 );	//Trade happens at next open after trigger.
+BuyPrice=SellPrice=ShortPrice=CoverPrice=Open;	//Tells Amibroker to buy and sell based on open.
+
+pointStop = 1; // Default is to use a 5-point stop 
+ApplyStop(stopTypeLoss,stopModePoint,pointStop,2);	//Stop loss a 5 points.
+
+// There are 2 ways to limit the number of contracts. Be default, we will use the first option
+SetPositionSize(3,spsShares); //Only trade 3 contracts
+//SetPositionSize( 20, spsPercentOfEquity ); //Only trade 20 percent of equity.
+
+
+
+
+/*
+Period = 20 is the optimal value for this model
+*/
+Period = Optimize("Change Period",20,5,100,5);
+
+
+//rate of change of close
+//PriceUp = ROC( C, Period ) > 0 ; 
+
+PriceUp = C > Ref(C, -Period) ; 
+
+/*
+Indicator = 36 is the optimal value for this model
+*/
+IndicatorPeriod = Optimize("Indicator",36, 1,50,5);
+IndicatorValue = RSI(IndicatorPeriod);
+
+/*Note: MACD histogram can be replaced with other indicator such as RSI
+IndicatorValue = RSI();
+IndicatorValue = ROC(C,15);
+*/
+
+/*
+ChangePct = 21 is the optimal value for this model with MACD histogram.
+*/
+ChangePct =  Optimize("Change Percentage",21,5,50,2);
+
+StochBuySignal = Cross(StochK(), StochD());
+StochSellSignal = Cross( StochD(),StochK());
+
+
+
+//indPeakVal1 = Peak(IndicatorValue, ChangePct, 1); // Most recent peak value
+//indPeakBars1 = PeakBars(IndicatorValue, ChangePct, 1); // Bars since most recent peak
+
+indPeakVal1 =StochBuySignal;
+indPeakBars1 =0;
+
+indPeakVal2 = Peak(IndicatorValue, ChangePct, 2); // Second most recent peak value
+indPeakBars2 = PeakBars(IndicatorValue, ChangePct, 2); // Bars since second most recent peak
+
+indTroughVal1 = Trough(IndicatorValue, ChangePct, 1); // Most recent trough value
+indTroughBars1 = TroughBars(IndicatorValue, ChangePct, 1); // Bars since most recent trough
+indTroughVal2 = Trough(IndicatorValue, ChangePct, 2); // Second most recent trough value
+indTroughBars2 = TroughBars(IndicatorValue, ChangePct, 2); // Bars since second most recent trough
+
+
+/*
+The fuction PeakBars gives the number of bars that have passed from the n-th peak.
+Based on this definition, if there is no bar has passed since my most recent peak,
+that means that the current bar is the Peak.
+
+Similar logic applies to current troughBar.
+*/
+currentPeakBar = IIf( indPeakBars1 == 0, True, False);
+currentTroughBar = IIf(indTroughBars1 == 0, True, False);
+
+/*When at the peak and the second most recent peak value is higher that the most recent peak value, that indicates a Negative Divergence*/
+isNegativeDivergence = IIf(currentPeakBar AND indPeakVal2 > indPeakVal1, True, False);
+
+/*When at the trough and the second most recent trough value is lower that the most recent trough value, that indicates a Positive Divergence*/
+isPositiveDivergence = IIf(currentTroughBar AND indTroughVal2 < indTroughVal1, True, False);
+
+
+
+/*
+If price is going down, and the indicator shows positive divergence, then buy
+*/
+DivergenceBuy =NOT PriceUp AND isPositiveDivergence;
+
+/*
+If price is going up, and the indicator shows negative divergence, then sell
+*/
+DivergenceSell = PriceUp AND isPositiveDivergence;
+
+
+Buy = isBuyHours AND DivergenceBuy;
+Sell = isEndOfDayExit OR DivergenceSell;
+
+Buy = DivergenceBuy;
+Sell = DivergenceSell AND False;
+
+/*Remove multiple buy/sell signal with Exrem*/
+//Buy = ExRem(Buy, Sell);
+//Sell = ExRem(Sell, Buy);
+
+Short = isBuyHours AND DivergenceBuy;
+Cover = isEndOfDayExit OR DivergenceSell;
+
+
+FileWithCommands = "C:\\Users\\vuha\\Documents\\Logs\\signal.txt";
+fh = fopen( FileWithCommands, "a",False );
+dt =  DateTime(); 
+timestamp = Now();
+delayMinute = 60;
+
+LatestBar = BarIndex() == LastValue(BarIndex());
+if (fh) 
+	{
+		text = "Symbol,"+ "Close," + "DateTime,TimeStamp,Action"   + "\n"; 
+		//fputs(text, fh);
+		for (i = 0; i< BarCount; i++)
+		{
+			if (Buy[i] )
+			{
+				//Say("Testing text to speech engine"); 
+				if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
+				{
+					text = name() + "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Buy" + "\n"; 
+					fputs(text, fh);				
+				}
+
+
+			}
+			if (Sell[i])
+			{
+				if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
+				{
+					text = name() + "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Sell" + "\n"; 
+					fputs(text, fh);				
+				}
+			}
+		}
+ 
+		fclose( fh ); 
+	}
+else 
+	{ 
+		Error("ERROR: File " + fileWithCommands + " cannot be open for writing."); 
+	}
+
+//Short = ExRem(Short, Cover);
+//Cover = ExRem(Cover, Short);
+/*
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{OHLC Candle Chart}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C ));
+
+PlotOHLC(Open, High, Low, Close, "OHLC Candle Chart", colorBlack, style = styleCandle | styleOwnScale);
+Plot(IndicatorValue,"RSI",colorDarkYellow, styleOwnScale );
+//Plot peaks and troughs 
+PlotShapes(IIf(isPositiveDivergence, shapeStar, shapeNone),colorGreen, 0, IndicatorValue, Offset=0);
+PlotShapes(IIf(isNegativeDivergence, shapeStar, shapeNone),colorRed, 0,IndicatorValue, Offset= 0);
+
+PlotShapes(IIf(isPositiveDivergence, shapeUpArrow, shapeNone),colorYellow, 0, L, Offset=- 30);
+PlotShapes(IIf(isNegativeDivergence, shapeCircle, shapeNone),colorRed, 0,L, Offset= 50);
+ 
+//AddColumn( isNegativeDivergence, "isNegativeDivergence", 1.0, colorDefault, IIf(isNegativeDivergence, colorRed , colorDefault ) ); 
+//AddColumn( isPositiveDivergence, "isPositiveDivergence", 1.0, colorDefault, IIf(isPositiveDivergence, colorGreen, colorDefault ) ); 
+//AddColumn( PriceUp, "PriceUp", 1.0, colorDefault, IIf(PriceUp, colorDefault, colorDefault ) ); 
+ */ 
+//AddColumn( isNegativeDivergence, "isNegativeDivergence", 1.0, colorDefault, IIf(isNegativeDivergence, colorRed , colorDefault ) ); 
+//AddColumn( isPositiveDivergence, "isPositiveDivergence", 1.0, colorDefault, IIf(isPositiveDivergence, colorGreen, colorDefault ) ); 
+//AddColumn( PriceUp, "PriceUp", 1.0, colorDefault, IIf(PriceUp, colorDefault, colorDefault ) ); 
+PlotOHLC(Open, High, Low, Close, "OHLC Candle Chart", colorBlack, style = styleCandle | styleOwnScale);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+ 
+/*
+References:
+1 - http://www.amibroker.com/kb/2007/07/17/how-to-detect-the-divergences/
+2 - https://www.wisestocktrader.com/indicators/4292-ultimate-divergence-detector-for-amibroker-afl
+3 - https://www.wisestocktrader.com/indicators/1649-chaloke-peak-and-trough-for-amibroker-afl
+
+
+*/
+
+_SECTION_BEGIN("Volume");
+Plot( Volume, _DEFAULT_NAME(), ParamColor("Color", colorBlueGrey ), ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick, maskHistogram  ) );
+_SECTION_END();
