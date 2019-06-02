@@ -29,3 +29,17 @@ C:\Users\vuha\Downloads\FinancialData-20190530T022455Z-001\FinancialData\TradePl
 C:\Users\vuha\Downloads\FinancialData-20190530T022455Z-001\FinancialData\TradePlatform\TradePlatform\obj\Debug\TradePlatform.csproj.CopyComplete
 C:\Users\vuha\Downloads\FinancialData-20190530T022455Z-001\FinancialData\TradePlatform\TradePlatform\obj\Debug\TradePlatform.exe
 C:\Users\vuha\Downloads\FinancialData-20190530T022455Z-001\FinancialData\TradePlatform\TradePlatform\obj\Debug\TradePlatform.pdb
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\Config\IBContract.xml
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\TradePlatform.exe.config
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\TradePlatform.exe
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\TradePlatform.pdb
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\TradePlatformHelper.dll
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\TradePlatformHelper.pdb
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.csprojAssemblyReference.cache
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.Home_1000.resources
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.Properties.Resources.resources
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.csproj.GenerateResource.cache
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.csproj.CoreCompileInputs.cache
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.csproj.CopyComplete
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.exe
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.pdb

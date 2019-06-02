@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.tbMode = new System.Windows.Forms.TextBox();
             this.btnEngine = new System.Windows.Forms.Button();
             this.btnBuy = new System.Windows.Forms.Button();
             this.btnContractDetails = new System.Windows.Forms.Button();
@@ -40,11 +41,13 @@
             this.tbHost = new System.Windows.Forms.TextBox();
             this.btnConnect = new System.Windows.Forms.Button();
             this.tbLog = new System.Windows.Forms.TextBox();
+            this.lbAllowedContract = new System.Windows.Forms.ListBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.tbMode);
             this.panel1.Controls.Add(this.btnEngine);
             this.panel1.Controls.Add(this.btnBuy);
             this.panel1.Controls.Add(this.btnContractDetails);
@@ -58,8 +61,18 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(878, 151);
+            this.panel1.Size = new System.Drawing.Size(1075, 151);
             this.panel1.TabIndex = 0;
+            // 
+            // tbMode
+            // 
+            this.tbMode.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tbMode.Enabled = false;
+            this.tbMode.Location = new System.Drawing.Point(0, 0);
+            this.tbMode.Name = "tbMode";
+            this.tbMode.Size = new System.Drawing.Size(1075, 20);
+            this.tbMode.TabIndex = 10;
+            this.tbMode.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // btnEngine
             // 
@@ -157,14 +170,26 @@
             this.tbLog.Location = new System.Drawing.Point(37, 226);
             this.tbLog.Multiline = true;
             this.tbLog.Name = "tbLog";
+            this.tbLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.tbLog.Size = new System.Drawing.Size(748, 361);
             this.tbLog.TabIndex = 1;
+            // 
+            // lbAllowedContract
+            // 
+            this.lbAllowedContract.FormattingEnabled = true;
+            this.lbAllowedContract.Location = new System.Drawing.Point(804, 226);
+            this.lbAllowedContract.Name = "lbAllowedContract";
+            this.lbAllowedContract.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.lbAllowedContract.Size = new System.Drawing.Size(69, 355);
+            this.lbAllowedContract.TabIndex = 2;
+            this.lbAllowedContract.SelectedIndexChanged += new System.EventHandler(this.LbAllowedContract_SelectedIndexChanged);
             // 
             // Home_1000
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(878, 656);
+            this.ClientSize = new System.Drawing.Size(1075, 656);
+            this.Controls.Add(this.lbAllowedContract);
             this.Controls.Add(this.tbLog);
             this.Controls.Add(this.panel1);
             this.Name = "Home_1000";
@@ -191,6 +216,8 @@
         private System.Windows.Forms.Button btnBuy;
         private System.Windows.Forms.TextBox tbLog;
         private System.Windows.Forms.Button btnEngine;
+        private System.Windows.Forms.TextBox tbMode;
+        private System.Windows.Forms.ListBox lbAllowedContract;
     }
 }
 

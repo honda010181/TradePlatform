@@ -36,6 +36,7 @@
     <Reference Include="CSharpAPI">
       <HintPath>..\..\..\..\..\..\TWS API\source\CSharpClient\client\bin\Debug\CSharpAPI.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

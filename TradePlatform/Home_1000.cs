@@ -14,6 +14,7 @@ using IBApi;
 using IBSampleApp.messages;
 using System.IO;
 using TradePlatformHelper.Objects;
+using Microsoft.VisualBasic;
 namespace TradePlatform
 {
     public partial class Home_1000 : Form
@@ -31,14 +32,14 @@ namespace TradePlatform
         private int SleepSeconds;
         private bool KeepRunning;
         private string Mode;
-        private int EngineCount = 0;
-
+        private string ApplicationLogFolder;
         private string EngineStatus;
+        private List<string> AllowedContractList = new List<string>();
+        private int DelayTolerance;
         public Home_1000()
         {
             InitializeComponent();
             ibClient = new IBClient(signal);
-            CurrentOrderID = ibClient.NextOrderId;
             EngineStatus = ApplicationHelper.STOP;
             LoadConfig();
 
@@ -53,6 +54,8 @@ namespace TradePlatform
             ibClient.OrderStatus += HandleOrderStatus;
             ibClient.OpenOrder += HandleOpenOrder;
 
+
+            InitializedControls();
         }
 
         private void BtnConnect_Click(object sender, EventArgs e)
@@ -87,7 +90,6 @@ namespace TradePlatform
                 var reader = new EReader(ibClient.ClientSocket, signal);
 
                 reader.Start();
-
                 new Thread(() => { while (ibClient.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
  
                  
@@ -115,10 +117,6 @@ namespace TradePlatform
 
         private void BtnBuy_Click(object sender, EventArgs e)
         {
-            Order order = new Order();
-            order.Action = "buy";
-            order.OrderType = "MKT";
-            order.TotalQuantity = 1;
 
             IBApi.Contract contract = new Contract();
             contract.Symbol = "ES";
@@ -127,19 +125,7 @@ namespace TradePlatform
             contract.Currency = "USD";
             contract.LocalSymbol = "ESM9";
 
-
-            ibClient.ClientSocket.reqIds(-1);
- 
-            List<Order> brackerOrder = ApplicationHelper.BracketOrder(CurrentOrderID, ApplicationHelper.BUY, 1, 2800, 2801, 2799);
-            CurrentOrderID = CurrentOrderID + 3;
-            //ibClient.ClientSocket.placeOrder(12,contract, brackerOrder);
-
- 
-            foreach (Order o in brackerOrder)
-            {
-                ibClient.ClientSocket.placeOrder(o.OrderId, contract, o);
-            }
-             
+            PlaceBracketOrder(contract);
         }
 
 
@@ -230,6 +216,8 @@ namespace TradePlatform
 
             str = string.Format("Order ID: {0} - Parent Order ID: {1} - Status: {2}", statusMessage.OrderId, statusMessage.ParentId, statusMessage.Status);
             ApplicationHelper.log(ref tbLog, str);
+
+            CurrentOrderID = statusMessage.OrderId > CurrentOrderID ? statusMessage.OrderId : CurrentOrderID;
         }
         private void HandleOpenOrder(OpenOrderMessage openOrder)
         {
@@ -237,13 +225,13 @@ namespace TradePlatform
 
             str = string.Format("Order ID: {0} - Contract: {1} - Status: {2}", openOrder.OrderId, openOrder.Contract, openOrder.OrderState);
             ApplicationHelper.log(ref tbLog, str);
+            CurrentOrderID = openOrder.OrderId > CurrentOrderID ? openOrder.OrderId : CurrentOrderID;
         }
 
         #endregion
 
         private void BtnEngine_Click(object sender, EventArgs e)
         {
-
 
             if (EngineStatus.Equals(ApplicationHelper.RUNNING) && btnEngine.Text.Equals("Start Engine"))
             {
@@ -252,15 +240,37 @@ namespace TradePlatform
             }
             if (EngineStatus.Equals(ApplicationHelper.STOP))
             {
+
+                if (AllowedContractList.Count == 0 && lbAllowedContract.Enabled)
+                {
+                    DialogResult result = MessageBox.Show("There is no contract selected to trade. Do you want to continue?", "Select Allowed Contracts", MessageBoxButtons.YesNo);
+
+                    if (!result.ToString().ToUpper().Equals(ApplicationHelper.YES))
+                    {
+                        return;
+                    }
+                }
+
+                //Once engine start, do not allow to change selected contracts;
+                lbAllowedContract.Enabled = false;
+                ApplicationHelper.log(ref tbLog, "Allowed Contracts");
+                foreach (string s in AllowedContractList)
+                {
+                    ApplicationHelper.log(ref tbLog, s);
+                }
+                ApplicationHelper.log(ref tbLog, "DelayTolerance: " + DelayTolerance);
+
+
                 btnEngine.Text = "Stop Engine";
                 KeepRunning = true;
-                Task t = Task.Run(() => RetrieveSignal());
-                 
+                Task t = Task.Run(() => RetrieveSignal());                 
             }
             else
             {
                 btnEngine.Text ="Start Engine" ;
                 KeepRunning = false;
+
+                lbAllowedContract.Enabled = true;
             }
         }
 
@@ -270,24 +280,78 @@ namespace TradePlatform
         {
             try
             {
+                Mode = ApplicationHelper.getConfigValue("Mode");
+                if (Mode.Equals(ApplicationHelper.PROD))
+                {
+                    MessageBox.Show("You are running in PROD");
+                    tbMode.Text = Mode;
+                    tbMode.BackColor = Color.DeepSkyBlue;
+                    tbMode.ForeColor = Color.White;
+                    tbMode.Enabled = false;
+                }
+                else
+                {
+                    tbMode.Text = Mode;
+                    tbMode.BackColor = Color.Firebrick;
+                    tbMode.ForeColor = Color.White;
+                    tbMode.Enabled = false;
+                }
                 signalPath = ApplicationHelper.getConfigValue("SignalPath");
                 SleepSeconds = int.Parse(ApplicationHelper.getConfigValue("SleepSeconds"));
                 ContractLog = ApplicationHelper.getConfigValue("ContractLog");
-                Mode = ApplicationHelper.getConfigValue("Mode");
-                KeepRunning = true;
+                ApplicationLogFolder = ApplicationHelper.getConfigValue("ApplicationLogFolder");
+                DelayTolerance = int.Parse(ApplicationHelper.getConfigValue("DelayTolerance"));
+
+                foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
+                {
+                    if (! AllowedContractList.Contains(s))
+                    {
+                        AllowedContractList.Add(s);
+                    }
+                }
             }
             catch (Exception ex)
             {
-
-                //Stop the app if config fails to load.
-                KeepRunning = false;
+                MessageBox.Show("Fail to load config");
                 ApplicationHelper.log(ref tbLog, "FAIL TO LOAD CONFIG: " + ex.ToString());
+                this.Enabled = false;
+
             }
         }
         #region "Form Events"
         private void Home_1000_FormClosing(object sender, FormClosingEventArgs e)
         {
-            ibClient.NextOrderId = CurrentOrderID;
+            string logFileName;
+
+            logFileName = ApplicationLogFolder + DateTime.Now.ToString("yyyy-MM-dd-h-m-s.") + "txt";
+
+            ApplicationHelper.log(logFileName, tbLog.Text);
+        }
+
+        private void InitializedControls()
+        {
+            //Initialize Contract Allowed List Box
+            foreach(string s in AllowedContractList)
+            {
+                lbAllowedContract.Items.Add(s);
+            }
+            //Once the lbAllowedContract is loaded, clear AllowContractList and drive it by what is selected in the lbAllowedContract
+            AllowedContractList.Clear();
+
+        }
+
+
+        private void LbAllowedContract_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            AllowedContractList.Clear();
+            foreach (string s in lbAllowedContract.SelectedItems)
+            {
+                if (!AllowedContractList.Contains(s))
+                {
+                    AllowedContractList.Add(s);
+                }
+            }
+            
         }
         #endregion
 
@@ -320,23 +384,50 @@ namespace TradePlatform
                 {
                     foreach (AContract c in ApplicationHelper.GetAmiSignalContracts(signalPath))
                     {
-                        if (!AContracts.Exists(x => x.Symbol == c.Symbol && x.DateTime.Equals(c.DateTime)))
+                        if (!AContracts.Exists(x => x.Symbol == c.Symbol && x.SignalDateTime.Equals(c.SignalDateTime)))
                         {
                             AContracts.Add(c);
-                            ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3}", c.Symbol, c.Close, c.DateTime, c.TimeStamp));
 
-                            ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4}",c.Action, c.Symbol, c.Close, c.DateTime, c.TimeStamp));
+                            ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
-                            if (Mode.Equals(ApplicationHelper.PROD))
+                            ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
+ 
+                            Contract contract = new Contract();
+
+                            contract = ApplicationHelper.BuildContract(c.Symbol);
+
+
+                            //Check if contract is allowed to trade.
+                            if (AllowedContractList.Contains(contract.LocalSymbol))
                             {
-                                if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.BUY))
-                                {
-                                
-                                }
-                                if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SELL))
-                                {
+                                ApplicationHelper.log(ref tbLog, string.Format("Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
 
+                                //Check if the time delay is valid
+                                if (DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now) > DelayTolerance)
+                                {
+                                    ApplicationHelper.log(ref tbLog, string.Format("ERROR: SIGNAL TOO LATE: Signal: {0} - Current Time: {1} - Delaytolerance: {2}", c.SignalDateTime, DateAndTime.Now, DelayTolerance));
+                                    continue;
                                 }
+
+                                if (Mode.Equals(ApplicationHelper.PROD))
+                                {
+                                    if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.BUY))
+                                    {
+
+                                        PlaceBracketOrder(contract);
+
+                                    }
+                                    if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SELL))
+                                    {
+
+                                    }
+                                    //In case of multiple signals, sleep 3 seconds
+                                    Thread.Sleep(3000);
+                                 }
+                            }
+                            else
+                            {
+                                ApplicationHelper.log(ref tbLog, string.Format("NOT ALLOWED - TRADE WILL NOT OCCUR - Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
                             }
 
                         }
@@ -354,5 +445,26 @@ namespace TradePlatform
             EngineStatus = ApplicationHelper.STOP;
             ApplicationHelper.log(ref tbLog, "Engine Ends: " + DateTime.Now.ToString());
         }
+
+
+
+
+        private void PlaceBracketOrder(IBApi.Contract contract)
+        {
+            CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
+
+            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId);
+            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID);
+
+            List<Order> brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.BUY, 1, 2800, 2801, 2799);
+
+            foreach (Order o in brackerOrder)
+            {
+                ibClient.ClientSocket.placeOrder(o.OrderId, contract, o);
+            }
+            CurrentOrderID = CurrentOrderID + 3;
+        }
+ 
+
     }
 }

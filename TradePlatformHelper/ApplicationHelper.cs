@@ -9,7 +9,7 @@ using System.Configuration.Assemblies;
 using TradePlatformHelper.Objects;
 using System.IO;
 using IBApi;
- 
+using Microsoft.VisualBasic; 
 using System.Drawing;
 using System.Threading;
  
@@ -24,7 +24,8 @@ namespace TradePlatformHelper
         public static string BUY = "BUY";
         public static string SELL = "SELL";
         public static string IBContractPath = "IBContract.xml";
-
+        public static string YES = "YES";
+        public static string NO = "NO";
         public static string PROD = "PROD";
         public static string TEST = "TEST";
         public static string RUNNING = "RUNNING";
@@ -54,8 +55,17 @@ namespace TradePlatformHelper
             {
                 if (!File.Exists(filePath))
                 {
-                    File.Create(filePath);
+                    using (StreamWriter sw = File.CreateText(filePath))
+                    {
+                        foreach (string s in msg.Split('\n'))
+                        {
+                            sw.WriteLine(s);
+                        }
+
+                        return;
+                    }
                 }
+
                 StreamWriter log = new StreamWriter(filePath,true);
 
                 log.WriteLine(msg);
@@ -114,23 +124,24 @@ namespace TradePlatformHelper
                         {
                            case 0:
                                 c.Symbol = cell.ToString().Trim();
-                                //i++;
                                 break;
                             case 1:
-                                c.Close = float.Parse( cell.ToString().Trim());
-                                //i++;
+                                c.SignalClose = float.Parse( cell.ToString().Trim());
                                 break;
                             case 2:
-                                c.DateTime = DateTime.Parse(cell.ToString().Trim());
-                               // i++;
+                                c.SignalDateTime = DateTime.Parse(cell.ToString().Trim());
                                 break;
                             case 3:
                                 c.TimeStamp = DateTime.Parse(cell.ToString().Trim());
-                                //i++;
                                 break;
                             case 4:
                                 c.Action = cell.ToString().Trim();
-                                //i++;
+                                break;
+                            case 5:
+                                c.LatestClose = float.Parse(cell.ToString().Trim());
+                                break;
+                            case 6:
+                                c.LatestDateTime = DateTime.Parse(cell.ToString().Trim());
                                 break;
                             default:
                                 break;
@@ -152,10 +163,10 @@ namespace TradePlatformHelper
                 throw new System.ArgumentException("ApplicationHelper.BracketOrder - Price margin is too large", "PriceMargin");
             }
             try
-            {
+             {
                 //This will be our main or "parent" order
                 Order parent = new Order();
-                parent.OrderId = parentOrderId;
+                parent.OrderId = parentOrderId; 
                 parent.Action = action;
                 parent.OrderType = LMT;
                 parent.TotalQuantity = quantity;
@@ -204,6 +215,36 @@ namespace TradePlatformHelper
             return contracts;
         }
 
-         
+
+        public static Contract BuildContract(string AmiSymbol)
+        {
+            Contract c = new Contract();
+            int i=0;
+
+            foreach (string s in AmiSymbol.Split('-'))
+            {
+                switch (i)
+                {
+                    case 0:
+                        c.LocalSymbol = s;
+                        break;
+                    case 1:
+                        c.Exchange = s;
+                        break;
+                    case 2:
+                        c.SecType = s;
+                        break;
+                    case 3:
+                        c.Currency = s;
+                        break;
+                }
+                i++;
+ 
+            }
+
+            return c;
+        }
+
+ 
     }
 }
