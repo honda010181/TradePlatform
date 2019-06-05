@@ -390,7 +390,7 @@ namespace TradePlatform
 
 
                             ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
- 
+
                             Contract contract = new Contract();
 
                             contract = ApplicationHelper.BuildContract(c.Symbol);
@@ -424,7 +424,7 @@ namespace TradePlatform
                                     }
                                     //In case of multiple signals, sleep 3 seconds
                                     Thread.Sleep(3000);
-                                 }
+                                }
                             }
                             else
                             {
@@ -432,6 +432,22 @@ namespace TradePlatform
                             }
 
                         }
+                    }
+                }
+                catch (IOException ex)
+                {
+                    //If the IOException due to the file is being blocked. Continues
+                    if (ex.Message.Contains(signalPath))
+                    {
+                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.");
+                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+
+                        Thread.Sleep(SleepSeconds * 1000);
+                    }
+                    else //Exit application
+                    {
+                        KeepRunning = false;
+                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
                     }
                 }
                 catch (Exception ex)
