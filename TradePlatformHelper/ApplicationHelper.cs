@@ -97,20 +97,20 @@ namespace TradePlatformHelper
         public static List<AContract> GetAmiSignalContracts(string souce)
         {
             List<AContract> contracts = new List<AContract>();
-            int rowCount= 0;
-            int index = 0;
+            //int rowCount= 0;
+            int index  ;
             string csvData = File.ReadAllText(souce);
 
             //Execute a loop over the rows.  
             foreach (string row in csvData.Split('\n'))
             {
-                rowCount++;
+                //rowCount++;
 
                 //Skip first row which is column header row
-                if (rowCount == 1)
-                {
-                    continue;
-                }
+                //if (rowCount == 1)
+                //{
+                //    continue;
+                //}
                 if (!string.IsNullOrEmpty(row))
                 {
  

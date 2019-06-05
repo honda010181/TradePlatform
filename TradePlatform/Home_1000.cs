@@ -388,7 +388,6 @@ namespace TradePlatform
                         {
                             AContracts.Add(c);
 
-                            ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
                             ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
  
@@ -408,6 +407,8 @@ namespace TradePlatform
                                     ApplicationHelper.log(ref tbLog, string.Format("ERROR: SIGNAL TOO LATE: Signal: {0} - Current Time: {1} - Delaytolerance: {2}", c.SignalDateTime, DateAndTime.Now, DelayTolerance));
                                     continue;
                                 }
+
+                                ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
                                 if (Mode.Equals(ApplicationHelper.PROD))
                                 {

@@ -962,5 +962,10 @@ namespace TradePlatform
                 sc.Post((t) => tmp(new OrderBoundMessage(orderId, apiClientId, apiOrderId)), null);
         }
 
+        void EWrapper.completedOrdersEnd()
+        { }
+        void EWrapper.completedOrder(Contract contract, Order order, OrderState orderState)
+        { }
+
     }
 }

@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CSharpAPI">
-      <HintPath>..\..\..\..\..\..\TWS API\source\CSharpClient\client\bin\Debug\CSharpAPI.dll</HintPath>
+      <HintPath>D:\TWS API\source\CSharpClient\client\bin\Debug\CSharpAPI.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
@@ -48,9 +48,6 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="TradePlatformHelper">
-      <HintPath>..\TradePlatformHelper\bin\Debug\TradePlatformHelper.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Home_1000.cs">
@@ -160,6 +157,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Logs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TradePlatformHelper\TradePlatformHelper.csproj">
+      <Project>{36af565e-f757-4d17-8c62-c4e4049f7ad8}</Project>
+      <Name>TradePlatformHelper</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
