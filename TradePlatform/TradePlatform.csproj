@@ -163,6 +163,10 @@
       <Project>{36af565e-f757-4d17-8c62-c4e4049f7ad8}</Project>
       <Name>TradePlatformHelper</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TradeSystems\TradeSystems.csproj">
+      <Project>{75d45403-36b4-40f8-8765-95aa2d1d8327}</Project>
+      <Name>TradeSystems</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

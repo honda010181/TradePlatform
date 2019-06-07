@@ -12,7 +12,7 @@ using IBApi;
 using Microsoft.VisualBasic; 
 using System.Drawing;
 using System.Threading;
- 
+using System.Net.Mail;
 namespace TradePlatformHelper
 {
     public static class ApplicationHelper
@@ -25,11 +25,17 @@ namespace TradePlatformHelper
         public static string SELL = "SELL";
         public static string IBContractPath = "IBContract.xml";
         public static string YES = "YES";
+        public static string Y = "Y";
         public static string NO = "NO";
+        public static string N = "N";
         public static string PROD = "PROD";
         public static string TEST = "TEST";
         public static string RUNNING = "RUNNING";
         public static string STOP = "STOP";
+        public static string ExceptionEmailNotification = "EmailNotificationException";
+        public static string ExceptionGetAmiSignal = "ExceptionGetAmiSignal";
+        public static string SMTPServer = "smtp.gmail.com";
+        public static int SMTPPort = 587;
         private delegate void SafeCallDelegate(ref TextBox tbLog, string msg);
 
  
@@ -97,61 +103,63 @@ namespace TradePlatformHelper
         public static List<AContract> GetAmiSignalContracts(string souce)
         {
             List<AContract> contracts = new List<AContract>();
-            //int rowCount= 0;
-            int index  ;
-            string csvData = File.ReadAllText(souce);
 
-            //Execute a loop over the rows.  
-            foreach (string row in csvData.Split('\n'))
+            try
             {
-                //rowCount++;
+                int index;
+                string csvData = File.ReadAllText(souce);
 
-                //Skip first row which is column header row
-                //if (rowCount == 1)
-                //{
-                //    continue;
-                //}
-                if (!string.IsNullOrEmpty(row))
+                //Execute a loop over the rows.  
+                foreach (string row in csvData.Split('\n'))
                 {
- 
-                    AContract c = new AContract();
-                    index = 0;
-                    //Execute a loop over the columns.  
-                    foreach (string cell in row.Split(','))
+                    if (!string.IsNullOrEmpty(row))
                     {
 
-                        switch (index)
+                        AContract c = new AContract();
+                        index = 0;
+                        //Execute a loop over the columns.  
+                        foreach (string cell in row.Split(','))
                         {
-                           case 0:
-                                c.Symbol = cell.ToString().Trim();
-                                break;
-                            case 1:
-                                c.SignalClose = float.Parse( cell.ToString().Trim());
-                                break;
-                            case 2:
-                                c.SignalDateTime = DateTime.Parse(cell.ToString().Trim());
-                                break;
-                            case 3:
-                                c.TimeStamp = DateTime.Parse(cell.ToString().Trim());
-                                break;
-                            case 4:
-                                c.Action = cell.ToString().Trim();
-                                break;
-                            case 5:
-                                c.LatestClose = float.Parse(cell.ToString().Trim());
-                                break;
-                            case 6:
-                                c.LatestDateTime = DateTime.Parse(cell.ToString().Trim());
-                                break;
-                            default:
-                                break;
-                        }
-                        index++;
-                    }
-                contracts.Add(c);
-                }
 
+                            switch (index)
+                            {
+                                case 0:
+                                    c.Symbol = cell.ToString().Trim();
+                                    break;
+                                case 1:
+                                    c.SignalClose = float.Parse(cell.ToString().Trim());
+                                    break;
+                                case 2:
+                                    c.SignalDateTime = DateTime.Parse(cell.ToString().Trim());
+                                    break;
+                                case 3:
+                                    c.TimeStamp = DateTime.Parse(cell.ToString().Trim());
+                                    break;
+                                case 4:
+                                    c.Action = cell.ToString().Trim();
+                                    break;
+                                case 5:
+                                    c.LatestClose = float.Parse(cell.ToString().Trim());
+                                    break;
+                                case 6:
+                                    c.LatestDateTime = DateTime.Parse(cell.ToString().Trim());
+                                    break;
+                                default:
+                                    break;
+                            }
+                            index++;
+                        }
+                        contracts.Add(c);
+                    }
+
+                }
             }
+            catch (Exception ex)
+            {
+                contracts.Clear();
+                throw new System.ArgumentException(System.Reflection.MethodInfo.GetCurrentMethod() + ex.Message, ExceptionGetAmiSignal);
+            }
+
             return contracts;
         }
 
@@ -245,6 +253,31 @@ namespace TradePlatformHelper
             return c;
         }
 
+
+        public static void SendNotification(string from,string fromPassword, string to, string subject, string body)
+        {
+            try
+            {
+                MailMessage message = new MailMessage(from, to, subject,body);
+
+                //Send the message.
+                SmtpClient client = new SmtpClient(SMTPServer);
+                // Add credentials if the SMTP server requires them.
+                client.Port = SMTPPort;
+            
+                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                client.UseDefaultCredentials = false;
+                client.Credentials = new System.Net.NetworkCredential(from, fromPassword);
+                client.EnableSsl = true;
+
+                client.Send(message);
+            }
+            catch (Exception ex)
+            {
+                throw new System.ArgumentException(System.Reflection.MethodInfo.GetCurrentMethod()  + ex.Message, ExceptionEmailNotification);
  
+            }
+
+        }
     }
 }

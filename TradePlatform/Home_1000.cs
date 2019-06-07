@@ -25,7 +25,8 @@ namespace TradePlatform
         private IBClient ibClient;
         private bool IsConnected { get; set; }
         private List<AContract> AContracts = new List<AContract>();
-        
+
+        private string Notification;
         private string signalPath;
         private string ContractLog;
         private int CurrentOrderID;
@@ -36,6 +37,10 @@ namespace TradePlatform
         private string EngineStatus;
         private List<string> AllowedContractList = new List<string>();
         private int DelayTolerance;
+        private string FromEmail;
+        private string FromEmailPassword;
+        private string ToEmail;
+
         public Home_1000()
         {
             InitializeComponent();
@@ -253,13 +258,14 @@ namespace TradePlatform
 
                 //Once engine start, do not allow to change selected contracts;
                 lbAllowedContract.Enabled = false;
+
                 ApplicationHelper.log(ref tbLog, "Allowed Contracts");
                 foreach (string s in AllowedContractList)
                 {
                     ApplicationHelper.log(ref tbLog, s);
                 }
                 ApplicationHelper.log(ref tbLog, "DelayTolerance: " + DelayTolerance);
-
+                ApplicationHelper.log(ref tbLog, "Notification:" + Notification);
 
                 btnEngine.Text = "Stop Engine";
                 KeepRunning = true;
@@ -301,6 +307,11 @@ namespace TradePlatform
                 ContractLog = ApplicationHelper.getConfigValue("ContractLog");
                 ApplicationLogFolder = ApplicationHelper.getConfigValue("ApplicationLogFolder");
                 DelayTolerance = int.Parse(ApplicationHelper.getConfigValue("DelayTolerance"));
+                Notification = ApplicationHelper.getConfigValue("Notification");
+                FromEmail = ApplicationHelper.getConfigValue("FromEmail");
+                FromEmailPassword = ApplicationHelper.getConfigValue("FromEmailPassword");
+                ToEmail = ApplicationHelper.getConfigValue("ToEmail");
+
 
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
@@ -391,6 +402,11 @@ namespace TradePlatform
 
                             ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
+                            if (Notification.Trim().ToUpper().Equals(ApplicationHelper.Y))
+                            {
+                                ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Ami Signal", tbLog.Text);
+                            }
+                             
                             Contract contract = new Contract();
 
                             contract = ApplicationHelper.BuildContract(c.Symbol);
@@ -408,6 +424,7 @@ namespace TradePlatform
                                     continue;
                                 }
 
+                                //Write to the text file log.
                                 ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
                                 if (Mode.Equals(ApplicationHelper.PROD))
@@ -430,30 +447,23 @@ namespace TradePlatform
                             {
                                 ApplicationHelper.log(ref tbLog, string.Format("NOT ALLOWED - TRADE WILL NOT OCCUR - Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
                             }
-
+ 
                         }
                     }
                 }
-                catch (IOException ex)
+                catch (ArgumentException ex)
                 {
-                    //If the IOException due to the file is being blocked. Continues
-                    if (ex.Message.Contains(signalPath))
-                    {
-                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.");
-                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
-
-                        Thread.Sleep(SleepSeconds * 1000);
-                    }
-                    else //Exit application
-                    {
-                        KeepRunning = false;
-                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
-                    }
+                    //These are not fatal exception and the system should keep running
+                    HandleCustomException(ex);
+                    ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
                 }
                 catch (Exception ex)
                 {
+
                     KeepRunning = false;
                     ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+
+                    ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
                 }
 
                 Thread.Sleep(SleepSeconds * 1000);
@@ -481,7 +491,55 @@ namespace TradePlatform
             }
             CurrentOrderID = CurrentOrderID + 3;
         }
- 
 
+
+        #region "Exception Handling"
+
+        private void HandleCustomException(ArgumentException ex)
+        {
+            if (ex.ParamName.Equals(ApplicationHelper.ExceptionEmailNotification))
+            {
+                HandleEmailException(ex);
+            }
+            if (ex.ParamName.Equals(ApplicationHelper.ExceptionGetAmiSignal))
+            {
+                HandleGetAmiSignal(ex);
+            }
+            else //If the exception is not custom, then stop program.
+            {
+                ApplicationHelper.log(ref tbLog, "Not a custom error. System will stop.");
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+                KeepRunning = false;
+            }
+
+        }
+
+        private void HandleGetAmiSignal(ArgumentException ex)
+        {
+            //If the IOException due to the file is being blocked. Continues
+            if (ex.Message.Contains(signalPath))
+            {
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.");
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+
+                Thread.Sleep(SleepSeconds * 1000);
+            }
+            else //Exit application
+            {
+                KeepRunning = false;
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+            }
+        }
+
+        private void HandleEmailException(ArgumentException ex)
+        {
+            ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Unable to send Email. The system will continue. This is not a fatal error. Details Error below.");
+            ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+
+            //Stop sending email
+            Notification = ApplicationHelper.N;
+        }
+
+        #endregion
     }
 }
