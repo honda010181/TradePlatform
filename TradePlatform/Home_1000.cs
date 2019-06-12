@@ -25,7 +25,7 @@ namespace TradePlatform
         private IBClient ibClient;
         private bool IsConnected { get; set; }
         private List<AContract> AContracts = new List<AContract>();
-
+ 
         private string Notification;
         private string signalPath;
         private string ContractLog;
@@ -40,6 +40,14 @@ namespace TradePlatform
         private string FromEmail;
         private string FromEmailPassword;
         private string ToEmail;
+        private int MaxTradesPerDay;
+        private int TradeCount = 0;
+
+
+        Dictionary<string, object> config;
+        float TrailingStopAmount;
+        int ContractQuantity;
+
 
         public Home_1000()
         {
@@ -58,6 +66,9 @@ namespace TradePlatform
 
             ibClient.OrderStatus += HandleOrderStatus;
             ibClient.OpenOrder += HandleOpenOrder;
+
+            ibClient.ExecDetails +=  HandleExecutionMessage;
+            ibClient.ExecDetailsEnd += reqId => addMessageToLog("ExecDetailsEnd. " + reqId + "\n");
 
 
             InitializedControls();
@@ -130,7 +141,8 @@ namespace TradePlatform
             contract.Currency = "USD";
             contract.LocalSymbol = "ESM9";
 
-            PlaceBracketOrder(contract);
+            //PlaceBracketOrder(contract);
+            PlaceTrailingStopOrder(contract,2875);
         }
 
 
@@ -213,8 +225,7 @@ namespace TradePlatform
         {
             HandleContractDetailsEnd(message);
         }
-
-
+ 
         private void HandleOrderStatus(OrderStatusMessage statusMessage)
         {
             string str;
@@ -223,6 +234,7 @@ namespace TradePlatform
             ApplicationHelper.log(ref tbLog, str);
 
             CurrentOrderID = statusMessage.OrderId > CurrentOrderID ? statusMessage.OrderId : CurrentOrderID;
+
         }
         private void HandleOpenOrder(OpenOrderMessage openOrder)
         {
@@ -234,7 +246,9 @@ namespace TradePlatform
         }
 
         #endregion
-
+        private void HandleExecutionMessage(ExecutionMessage message)
+        {
+        }
         private void BtnEngine_Click(object sender, EventArgs e)
         {
 
@@ -311,7 +325,7 @@ namespace TradePlatform
                 FromEmail = ApplicationHelper.getConfigValue("FromEmail");
                 FromEmailPassword = ApplicationHelper.getConfigValue("FromEmailPassword");
                 ToEmail = ApplicationHelper.getConfigValue("ToEmail");
-
+                MaxTradesPerDay = int.Parse(ApplicationHelper.getConfigValue("MaxTradesPerDay"));
 
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
@@ -320,6 +334,8 @@ namespace TradePlatform
                         AllowedContractList.Add(s);
                     }
                 }
+
+                LoadTrailingStopConfig();
             }
             catch (Exception ex)
             {
@@ -384,7 +400,8 @@ namespace TradePlatform
             }
 
             ApplicationHelper.log(ref tbLog,"Application mode: " + Mode);
-
+            ApplicationHelper.log(ref tbLog, "MaxTradesPerDay: " + MaxTradesPerDay);
+             
             EngineStatus = ApplicationHelper.RUNNING;
             ApplicationHelper.log(ref tbLog, "Engine Starts: " + DateTime.Now.ToString());
 
@@ -427,13 +444,15 @@ namespace TradePlatform
                                 //Write to the text file log.
                                 ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
-                                if (Mode.Equals(ApplicationHelper.PROD))
+                                if (Mode.Equals(ApplicationHelper.PROD) & TradeCount <= MaxTradesPerDay)
                                 {
+                                                                        
+                                    TradeCount++;
+
                                     if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.BUY))
                                     {
-
-                                        PlaceBracketOrder(contract);
-
+                                        PlaceTrailingStopOrder(contract, c.LatestClose);
+                                        
                                     }
                                     if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SELL))
                                     {
@@ -473,9 +492,6 @@ namespace TradePlatform
             ApplicationHelper.log(ref tbLog, "Engine Ends: " + DateTime.Now.ToString());
         }
 
-
-
-
         private void PlaceBracketOrder(IBApi.Contract contract)
         {
             CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
@@ -492,6 +508,49 @@ namespace TradePlatform
             CurrentOrderID = CurrentOrderID + 3;
         }
 
+ 
+        private void addMessageToLog(string text)
+        {
+            HandleErrorMessage(new ErrorMessage(-1, -1, text));
+        }
+
+
+        #region "Trailing Stop"
+        private void PlaceTrailingStopOrder(IBApi.Contract contract, double LatestClose)
+        {
+            CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
+
+            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId);
+            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID);
+
+            //I want to get filled.
+            LatestClose = LatestClose + 2;
+
+            List<Order> brackerOrder = ApplicationHelper.TrailingStopOrder(++CurrentOrderID, ApplicationHelper.BUY, LatestClose, ContractQuantity, TrailingStopAmount);
+
+            foreach (Order o in brackerOrder)
+            {
+                ibClient.ClientSocket.placeOrder(o.OrderId, contract, o);
+            }
+            CurrentOrderID = CurrentOrderID + 3;
+
+
+            ApplicationHelper.log(ref tbLog, "PlaceTrailingStopOrder Submitted" );
+        }
+
+
+        private void LoadTrailingStopConfig()
+        {
+            config = new Dictionary<string, object>();
+            config = ApplicationHelper.ReadXML("Config/TraillingStopSystem.xml");
+
+            float.TryParse(config.First(x => x.Key == ApplicationHelper.TrailingStopAmount).Value.ToString(), out TrailingStopAmount);
+            int.TryParse(config.First(x => x.Key == ApplicationHelper.ContractQuantity).Value.ToString(), out ContractQuantity);
+
+            ApplicationHelper.log(ref tbLog, "TrailingStopAmount : " + TrailingStopAmount);
+            ApplicationHelper.log(ref tbLog, "ContractQuantity : " + ContractQuantity);
+        }
+        #endregion
 
         #region "Exception Handling"
 

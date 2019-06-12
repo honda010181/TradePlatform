@@ -123,6 +123,7 @@
     <Compile Include="messages\UpdatePortfolioMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TradeSystems\TraillingStopSystem.cs" />
     <Compile Include="ui\TickReqParamsMessage.cs" />
     <EmbeddedResource Include="Home_1000.resx">
       <DependentUpon>Home_1000.cs</DependentUpon>
@@ -154,6 +155,9 @@
     <Content Include="Config\IBContract.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Config\TraillingStopSystem.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Logs\" />
@@ -163,10 +167,9 @@
       <Project>{36af565e-f757-4d17-8c62-c4e4049f7ad8}</Project>
       <Name>TradePlatformHelper</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TradeSystems\TradeSystems.csproj">
-      <Project>{75d45403-36b4-40f8-8765-95aa2d1d8327}</Project>
-      <Name>TradeSystems</Name>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

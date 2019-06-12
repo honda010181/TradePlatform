@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<StaggerSystem>
+  <StopLoss>5</StopLoss>
+  <NumberOfStep>1</NumberOfStep>
+  <StepSize>1</StepSize>
+  <ContractQuantityPerStep>1</ContractQuantityPerStep>
+</StaggerSystem>

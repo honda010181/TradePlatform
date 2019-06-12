@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TradePlatformHelper", "Trad
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAPI", "D:\TWS API\source\CSharpClient\client\CSharpAPI.csproj", "{8EDE0744-96C2-40B0-A8DC-37DF79370203}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TradeSystems", "TradeSystems\TradeSystems.csproj", "{75D45403-36B4-40F8-8765-95AA2D1D8327}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Misc", "Misc\Misc.csproj", "{81FF3C35-2670-482A-A4D2-65841622E271}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,10 +33,10 @@ Global
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EDE0744-96C2-40B0-A8DC-37DF79370203}.Release|Any CPU.Build.0 = Release|Any CPU
-		{75D45403-36B4-40F8-8765-95AA2D1D8327}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{75D45403-36B4-40F8-8765-95AA2D1D8327}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{75D45403-36B4-40F8-8765-95AA2D1D8327}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{75D45403-36B4-40F8-8765-95AA2D1D8327}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81FF3C35-2670-482A-A4D2-65841622E271}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81FF3C35-2670-482A-A4D2-65841622E271}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81FF3C35-2670-482A-A4D2-65841622E271}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81FF3C35-2670-482A-A4D2-65841622E271}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

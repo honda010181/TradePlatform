@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<SingleContract>
-  <StopLoss>5</StopLoss>
-  <TrailingStop>5</TrailingStop>
-</SingleContract>

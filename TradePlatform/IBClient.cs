@@ -13,7 +13,7 @@ using TradePlatformHelper;
  
 namespace TradePlatform
 {
-    class IBClient : EWrapper
+   class IBClient : EWrapper
     {
         private EClientSocket clientSocket;
         private int nextOrderId;
