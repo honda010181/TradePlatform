@@ -123,6 +123,7 @@
     <Compile Include="messages\UpdatePortfolioMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TradeSystems\BracketSystem.cs" />
     <Compile Include="TradeSystems\TraillingStopSystem.cs" />
     <Compile Include="ui\TickReqParamsMessage.cs" />
     <EmbeddedResource Include="Home_1000.resx">
@@ -153,6 +154,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\IBContract.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Config\StaggeringSystem.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Config\BracketSystem.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Config\TraillingStopSystem.xml">

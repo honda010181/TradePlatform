@@ -1,10 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <IBContract>
-  <CONTRACT>
-    <SYMBOL>ES</SYMBOL>
-    <SECTYPE>FUT</SECTYPE>
-    <EXCHANGE>GLOBEX</EXCHANGE>
-    <CURRENCY>USD</CURRENCY>
-    <LOCALSYMBOL>ESM9</LOCALSYMBOL>
-  </CONTRACT> 
+  <EminiSP500>ESU9-GLOBEX-FUT-USD</EminiSP500>
 </IBContract>

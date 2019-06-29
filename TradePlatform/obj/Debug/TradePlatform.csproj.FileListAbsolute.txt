@@ -46,3 +46,5 @@ C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.c
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.exe
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.pdb
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\Config\TraillingStopSystem.xml
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\Config\StaggeringSystem.xml
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\Config\BracketSystem.xml

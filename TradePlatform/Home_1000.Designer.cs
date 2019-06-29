@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnMartketData = new System.Windows.Forms.Button();
             this.tbMode = new System.Windows.Forms.TextBox();
             this.btnEngine = new System.Windows.Forms.Button();
             this.btnBuy = new System.Windows.Forms.Button();
@@ -42,11 +43,25 @@
             this.btnConnect = new System.Windows.Forms.Button();
             this.tbLog = new System.Windows.Forms.TextBox();
             this.lbAllowedContract = new System.Windows.Forms.ListBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.lbMNQM9 = new System.Windows.Forms.Label();
+            this.lbM2KM9Price = new System.Windows.Forms.Label();
+            this.lbRTYM9Price = new System.Windows.Forms.Label();
+            this.lbNQM9Price = new System.Windows.Forms.Label();
+            this.lbMESM9Price = new System.Windows.Forms.Label();
+            this.lbESM9Price = new System.Windows.Forms.Label();
+            this.lbLastRun = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btnMartketData);
             this.panel1.Controls.Add(this.tbMode);
             this.panel1.Controls.Add(this.btnEngine);
             this.panel1.Controls.Add(this.btnBuy);
@@ -63,6 +78,16 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1075, 151);
             this.panel1.TabIndex = 0;
+            // 
+            // btnMartketData
+            // 
+            this.btnMartketData.Location = new System.Drawing.Point(804, 74);
+            this.btnMartketData.Name = "btnMartketData";
+            this.btnMartketData.Size = new System.Drawing.Size(75, 23);
+            this.btnMartketData.TabIndex = 11;
+            this.btnMartketData.Text = "Market Data";
+            this.btnMartketData.UseVisualStyleBackColor = true;
+            this.btnMartketData.Click += new System.EventHandler(this.BtnMartketData_Click);
             // 
             // tbMode
             // 
@@ -184,11 +209,141 @@
             this.lbAllowedContract.TabIndex = 2;
             this.lbAllowedContract.SelectedIndexChanged += new System.EventHandler(this.LbAllowedContract_SelectedIndexChanged);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(880, 226);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(36, 13);
+            this.label1.TabIndex = 3;
+            this.label1.Text = "ESM9";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(880, 260);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(45, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "MESM9";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(880, 296);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(38, 13);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "NQM9";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(880, 335);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(44, 13);
+            this.label4.TabIndex = 6;
+            this.label4.Text = "RTYM9";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(880, 375);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(44, 13);
+            this.label5.TabIndex = 7;
+            this.label5.Text = "M2KM9";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(880, 414);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(47, 13);
+            this.label6.TabIndex = 8;
+            this.label6.Text = "MNQM9";
+            // 
+            // lbMNQM9
+            // 
+            this.lbMNQM9.AutoSize = true;
+            this.lbMNQM9.Location = new System.Drawing.Point(937, 414);
+            this.lbMNQM9.Name = "lbMNQM9";
+            this.lbMNQM9.Size = new System.Drawing.Size(55, 13);
+            this.lbMNQM9.TabIndex = 14;
+            this.lbMNQM9.Text = "lbMNQM9";
+            // 
+            // lbM2KM9Price
+            // 
+            this.lbM2KM9Price.AutoSize = true;
+            this.lbM2KM9Price.Location = new System.Drawing.Point(937, 375);
+            this.lbM2KM9Price.Name = "lbM2KM9Price";
+            this.lbM2KM9Price.Size = new System.Drawing.Size(76, 13);
+            this.lbM2KM9Price.TabIndex = 13;
+            this.lbM2KM9Price.Text = "lbM2KM9Price";
+            // 
+            // lbRTYM9Price
+            // 
+            this.lbRTYM9Price.AutoSize = true;
+            this.lbRTYM9Price.Location = new System.Drawing.Point(937, 335);
+            this.lbRTYM9Price.Name = "lbRTYM9Price";
+            this.lbRTYM9Price.Size = new System.Drawing.Size(76, 13);
+            this.lbRTYM9Price.TabIndex = 12;
+            this.lbRTYM9Price.Text = "lbRTYM9Price";
+            // 
+            // lbNQM9Price
+            // 
+            this.lbNQM9Price.AutoSize = true;
+            this.lbNQM9Price.Location = new System.Drawing.Point(937, 296);
+            this.lbNQM9Price.Name = "lbNQM9Price";
+            this.lbNQM9Price.Size = new System.Drawing.Size(70, 13);
+            this.lbNQM9Price.TabIndex = 11;
+            this.lbNQM9Price.Text = "lbNQM9Price";
+            // 
+            // lbMESM9Price
+            // 
+            this.lbMESM9Price.AutoSize = true;
+            this.lbMESM9Price.Location = new System.Drawing.Point(937, 260);
+            this.lbMESM9Price.Name = "lbMESM9Price";
+            this.lbMESM9Price.Size = new System.Drawing.Size(77, 13);
+            this.lbMESM9Price.TabIndex = 10;
+            this.lbMESM9Price.Text = "lbMESM9Price";
+            // 
+            // lbESM9Price
+            // 
+            this.lbESM9Price.AutoSize = true;
+            this.lbESM9Price.Location = new System.Drawing.Point(937, 226);
+            this.lbESM9Price.Name = "lbESM9Price";
+            this.lbESM9Price.Size = new System.Drawing.Size(68, 13);
+            this.lbESM9Price.TabIndex = 9;
+            this.lbESM9Price.Text = "lbESM9Price";
+            // 
+            // lbLastRun
+            // 
+            this.lbLastRun.AutoSize = true;
+            this.lbLastRun.Location = new System.Drawing.Point(37, 618);
+            this.lbLastRun.Name = "lbLastRun";
+            this.lbLastRun.Size = new System.Drawing.Size(56, 13);
+            this.lbLastRun.TabIndex = 15;
+            this.lbLastRun.Text = "Last Run: ";
+            // 
             // Home_1000
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1075, 656);
+            this.Controls.Add(this.lbLastRun);
+            this.Controls.Add(this.lbMNQM9);
+            this.Controls.Add(this.lbM2KM9Price);
+            this.Controls.Add(this.lbRTYM9Price);
+            this.Controls.Add(this.lbNQM9Price);
+            this.Controls.Add(this.lbMESM9Price);
+            this.Controls.Add(this.lbESM9Price);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.lbAllowedContract);
             this.Controls.Add(this.tbLog);
             this.Controls.Add(this.panel1);
@@ -218,6 +373,20 @@
         private System.Windows.Forms.Button btnEngine;
         private System.Windows.Forms.TextBox tbMode;
         private System.Windows.Forms.ListBox lbAllowedContract;
+        private System.Windows.Forms.Button btnMartketData;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label lbMNQM9;
+        private System.Windows.Forms.Label lbM2KM9Price;
+        private System.Windows.Forms.Label lbRTYM9Price;
+        private System.Windows.Forms.Label lbNQM9Price;
+        private System.Windows.Forms.Label lbMESM9Price;
+        private System.Windows.Forms.Label lbESM9Price;
+        private System.Windows.Forms.Label lbLastRun;
     }
 }
 

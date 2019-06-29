@@ -15,6 +15,7 @@ using IBSampleApp.messages;
 using System.IO;
 using TradePlatformHelper.Objects;
 using Microsoft.VisualBasic;
+using TradePlatform.TradeSystems;
 namespace TradePlatform
 {
     public partial class Home_1000 : Form
@@ -25,7 +26,11 @@ namespace TradePlatform
         private IBClient ibClient;
         private bool IsConnected { get; set; }
         private List<AContract> AContracts = new List<AContract>();
- 
+
+
+        private Dictionary<int, string> IBContract = new Dictionary<int, string>();
+        
+        private BracketSystem BracketSystem;
         private string Notification;
         private string signalPath;
         private string ContractLog;
@@ -42,7 +47,8 @@ namespace TradePlatform
         private string ToEmail;
         private int MaxTradesPerDay;
         private int TradeCount = 0;
-
+        private int DelaySecondUntillSignalValid;
+        private bool PositionOpen { get; set; }
 
         Dictionary<string, object> config;
         float TrailingStopAmount;
@@ -71,8 +77,35 @@ namespace TradePlatform
             ibClient.ExecDetailsEnd += reqId => addMessageToLog("ExecDetailsEnd. " + reqId + "\n");
 
 
+            //Getting snapshot streaming every 11 seconds
+            ibClient.TickPrice += ibClient_Tick;
+            ibClient.TickSize += ibClient_Tick;
+            ibClient.TickString += (tickerId, tickType, value) => addMessageToLog("Tick string. Ticker Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + value + "\n");
+            //ibClient.TickGeneric += (tickerId, field, value) => addMessageToLog("Tick Generic. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value + "\n");
+            ibClient.TickEFP += (tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays, futureLastTradeDate, dividendImpact, dividendsToLastTradeDate) => addMessageToLog("TickEFP. " + tickerId + ", Type: " + tickType + ", BasisPoints: " + basisPoints + ", FormattedBasisPoints: " + formattedBasisPoints + ", ImpliedFuture: " + impliedFuture + ", HoldDays: " + holdDays + ", FutureLastTradeDate: " + futureLastTradeDate + ", DividendImpact: " + dividendImpact + ", DividendsToLastTradeDate: " + dividendsToLastTradeDate + "\n");
+            ibClient.TickSnapshotEnd += tickerId => addMessageToLog("TickSnapshotEnd: " + tickerId + "\n");
+
+
             InitializedControls();
+ 
         }
+
+        #region "Button Click"
+        private void BtnMartketData_Click(object sender, EventArgs e)
+        {
+            IBApi.Contract contract = new Contract();
+            contract.Symbol = "ES";
+            contract.SecType = "FUT";
+            contract.Exchange = "GLOBEX";
+            contract.Currency = "USD";
+            contract.LocalSymbol = "ESM9";
+
+            ApplicationHelper.log(ref tbLog,"Start streaming live data");
+
+            //Each regulatory snapshot made will incur a fee of 0.01 USD to the account. This applies to both live and paper accounts.
+            ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.ESM9),contract, "233", false, false, null);
+        }
+
 
         private void BtnConnect_Click(object sender, EventArgs e)
         {
@@ -141,9 +174,11 @@ namespace TradePlatform
             contract.Currency = "USD";
             contract.LocalSymbol = "ESM9";
 
-            //PlaceBracketOrder(contract);
-            PlaceTrailingStopOrder(contract,2875);
+            //PlaceTrailingStopOrder(contract,2875);
+            PlaceBracketOrder(contract, 2875,ApplicationHelper.BUY);
         }
+
+        #endregion
 
 
         #region "Handle Connection"
@@ -172,8 +207,25 @@ namespace TradePlatform
 
             HandleErrorMessage(error);
         }
+
+        void ibClient_Tick(TickPriceMessage msg)
+        {
+                HandleTickMessage(msg);
+        }
+        void ibClient_Tick(TickSizeMessage msg)
+        {
+ 
+                HandleTickMessage(msg);
+ 
+        }
+        private void HandleTickMessage(MarketDataMessage tickMessage)
+        {
+            //ApplicationHelper.log(ref tbLog,string.Format("Request ID: {0} - Field: {1}", tickMessage.RequestId, tickMessage.Field));
+        }
         private void HandleErrorMessage(ErrorMessage message)
         {
+
+ 
             //ShowMessageOnPanel("Request " + message.RequestId + ", Code: " + message.ErrorCode + " - " + message.Message);
 
             //if (message.RequestId > MarketDataManager.TICK_ID_BASE && message.RequestId < DeepBookManager.TICK_ID_BASE)
@@ -283,7 +335,18 @@ namespace TradePlatform
 
                 btnEngine.Text = "Stop Engine";
                 KeepRunning = true;
-                Task t = Task.Run(() => RetrieveSignal());                 
+
+
+                ApplicationHelper.log(ref tbLog, "Application mode: " + Mode);
+                ApplicationHelper.log(ref tbLog, "MaxTradesPerDay: " + MaxTradesPerDay);
+                ApplicationHelper.log(ref tbLog, "Engine Starts: " + DateTime.Now.ToString());
+
+
+                foreach (string filePath in Directory.GetFiles(signalPath,"signal*.txt"))
+                {
+                    Task t = Task.Run(() => RetrieveSignal(filePath));
+                }
+ 
             }
             else
             {
@@ -294,7 +357,10 @@ namespace TradePlatform
             }
         }
 
+        private void HandleTickSnapshotEnd()
+        {
 
+        }
 
         private void LoadConfig()
         {
@@ -326,6 +392,7 @@ namespace TradePlatform
                 FromEmailPassword = ApplicationHelper.getConfigValue("FromEmailPassword");
                 ToEmail = ApplicationHelper.getConfigValue("ToEmail");
                 MaxTradesPerDay = int.Parse(ApplicationHelper.getConfigValue("MaxTradesPerDay"));
+                DelaySecondUntillSignalValid = int.Parse(ApplicationHelper.getConfigValue("DelaySecondUntillSignalValid"));
 
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
@@ -335,7 +402,7 @@ namespace TradePlatform
                     }
                 }
 
-                LoadTrailingStopConfig();
+                LoadSystemConfig();
             }
             catch (Exception ex)
             {
@@ -367,6 +434,11 @@ namespace TradePlatform
 
         }
 
+        private void LoadSystemConfig()
+        {
+            //LoadTrailingStopConfig();
+            LoadBraketSystemConfig();
+        }
 
         private void LbAllowedContract_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -383,7 +455,7 @@ namespace TradePlatform
         #endregion
 
 
-        private void RetrieveSignal()
+        private void RetrieveSignal(string signalPath)
         {
 
             if (signalPath.Length == 0)
@@ -398,93 +470,133 @@ namespace TradePlatform
                 MessageBox.Show(String.Format("The path: {0} does not exist", signalPath));
                 KeepRunning = false;
             }
-
-            ApplicationHelper.log(ref tbLog,"Application mode: " + Mode);
-            ApplicationHelper.log(ref tbLog, "MaxTradesPerDay: " + MaxTradesPerDay);
-             
             EngineStatus = ApplicationHelper.RUNNING;
-            ApplicationHelper.log(ref tbLog, "Engine Starts: " + DateTime.Now.ToString());
 
+
+            //Set position
+            PositionOpen = false;
+            List<AContract> tempAContractList = new List<AContract>();
             while (KeepRunning)
             {
 
-                try
+           
+                try //Global Try
                 {
-                    foreach (AContract c in ApplicationHelper.GetAmiSignalContracts(signalPath))
+
+                    ApplicationHelper.setLable(ref lbLastRun, "Last Run: " + DateTime.Now.ToString());
+
+                    try
                     {
-                        if (!AContracts.Exists(x => x.Symbol == c.Symbol && x.SignalDateTime.Equals(c.SignalDateTime)))
+                        tempAContractList = ApplicationHelper.GetAmiSignalContracts(signalPath);
+
+                        var query = tempAContractList.GroupBy(x => new {Action =x.Action,Symbol= x.Symbol, SignalClose= x.SignalClose })
+                                    .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalClose = c.Key.SignalClose,count = c.Count()  })
+                        ;
+
+                        query.ToList();       
+                        
+                        foreach (var c in query.ToList())
                         {
-                            AContracts.Add(c);
-
-
-                            ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
-
-                            if (Notification.Trim().ToUpper().Equals(ApplicationHelper.Y))
+                            if (c.count <= DelaySecondUntillSignalValid)
                             {
-                                ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Ami Signal", tbLog.Text);
+                                tempAContractList.RemoveAll(x => x.SignalClose == c.SignalClose);
                             }
-                             
-                            Contract contract = new Contract();
+                        }
 
-                            contract = ApplicationHelper.BuildContract(c.Symbol);
+                        foreach (AContract c in tempAContractList)
+                        {
 
 
-                            //Check if contract is allowed to trade.
-                            if (AllowedContractList.Contains(contract.LocalSymbol))
+                            if (!AContracts.Exists(x => x.Symbol == c.Symbol && x.SignalDateTime.Equals(c.SignalDateTime)))
                             {
-                                ApplicationHelper.log(ref tbLog, string.Format("Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
+
+                                AContracts.Add(c);
 
                                 //Check if the time delay is valid
                                 if (DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now) > DelayTolerance)
                                 {
-                                    ApplicationHelper.log(ref tbLog, string.Format("ERROR: SIGNAL TOO LATE: Signal: {0} - Current Time: {1} - Delaytolerance: {2}", c.SignalDateTime, DateAndTime.Now, DelayTolerance));
+                                    ApplicationHelper.log(ref tbLog, string.Format("ERROR: SIGNAL TOO LATE: {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Delaytolerance: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, DelayTolerance, c.Action));
                                     continue;
                                 }
 
-                                //Write to the text file log.
-                                ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
+                                ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
-                                if (Mode.Equals(ApplicationHelper.PROD) & TradeCount <= MaxTradesPerDay)
+                                if (Notification.Trim().ToUpper().Equals(ApplicationHelper.Y))
                                 {
-                                                                        
-                                    TradeCount++;
-
-                                    if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.BUY))
-                                    {
-                                        PlaceTrailingStopOrder(contract, c.LatestClose);
-                                        
-                                    }
-                                    if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SELL))
-                                    {
-
-                                    }
-                                    //In case of multiple signals, sleep 3 seconds
-                                    Thread.Sleep(3000);
+                                    ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Ami Signal", tbLog.Text);
                                 }
+
+                                Contract contract = new Contract();
+
+                                contract = ApplicationHelper.BuildContract(c.Symbol);
+
+
+                                //Check if contract is allowed to trade.
+                                if (AllowedContractList.Contains(contract.LocalSymbol))
+                                {
+                                    ApplicationHelper.log(ref tbLog, string.Format("Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
+
+                                    //Write to the text file log.
+                                    ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
+
+                                    //if (PositionOpen)
+                                    //{
+                                    //    ApplicationHelper.log(ref tbLog, string.Format("Postiion is currently open. This signal will be skipped."));
+                                    //    continue;
+                                    //}
+                                    if (Mode.Equals(ApplicationHelper.PROD) & TradeCount <= MaxTradesPerDay)
+                                    {
+
+                                        TradeCount++;
+
+                                        if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.BUY))
+                                        {
+                                            //PlaceTrailingStopOrder(contract, c.LatestClose);
+                                            PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.BUY);
+
+                                        }
+                                        if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SHORT))
+                                        {
+                                            //PlaceTrailingStopOrder(contract, c.LatestClose);
+                                            PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.SHORT);
+                                        }
+                                        //In case of multiple signals, sleep 3 seconds
+                                        Thread.Sleep(3000);
+                                    }
+                                }
+                                else
+                                {
+                                    ApplicationHelper.log(ref tbLog, string.Format("NOT ALLOWED - TRADE WILL NOT OCCUR - Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
+                                }
+
                             }
-                            else
-                            {
-                                ApplicationHelper.log(ref tbLog, string.Format("NOT ALLOWED - TRADE WILL NOT OCCUR - Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
-                            }
- 
                         }
                     }
-                }
-                catch (ArgumentException ex)
-                {
-                    //These are not fatal exception and the system should keep running
-                    HandleCustomException(ex);
-                    ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
+                    catch (ArgumentException ex)
+                    {
+                        //These are not fatal exception and the system should keep running
+                        HandleCustomException(ex);
+                        ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        //KeepRunning = false;
+                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+
+                        ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
+                    }
                 }
                 catch (Exception ex)
                 {
-
-                    KeepRunning = false;
-                    ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
-
-                    ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
+                    ApplicationHelper.log(ref tbLog, ex.Message.ToString());
                 }
-
+                finally
+                {
+                    tempAContractList.Clear();
+                }
+ 
+                
                 Thread.Sleep(SleepSeconds * 1000);
 
             }
@@ -492,14 +604,39 @@ namespace TradePlatform
             ApplicationHelper.log(ref tbLog, "Engine Ends: " + DateTime.Now.ToString());
         }
 
-        private void PlaceBracketOrder(IBApi.Contract contract)
+        private void PlaceBracketOrder(IBApi.Contract contract, double LatestClose, string action)
         {
+
+            //Get latest close value from IB
+            double.TryParse( lbESM9Price.Text,out LatestClose);
+            
             CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
+                       
+            BracketSystem.CurrentOrderID = CurrentOrderID;
+            BracketSystem.EnterPostionPrice = LatestClose;
+
+            Double ProfitTakerPrice ;
+            Double StopPrice  ;
+
+            ProfitTakerPrice = action.Equals(ApplicationHelper.BUY) ? BracketSystem.ProfitTakerAmount + LatestClose : LatestClose - BracketSystem.ProfitTakerAmount;
+            StopPrice = action.Equals(ApplicationHelper.BUY) ? LatestClose - Math.Abs(BracketSystem.StopAmount) : LatestClose + Math.Abs(BracketSystem.StopAmount);
 
             ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId);
             ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID);
+            ApplicationHelper.log(ref tbLog, "Enter Position Price: " + BracketSystem.EnterPostionPrice);
+            ApplicationHelper.log(ref tbLog, "Profit Taker Price: " + ProfitTakerPrice);
+            ApplicationHelper.log(ref tbLog, "Stop Price: " + StopPrice);
 
-            List<Order> brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.BUY, 1, 2800, 2801, 2799);
+            List<Order> brackerOrder = new List<Order>();
+
+            if (action.Equals(ApplicationHelper.BUY))
+            {
+                brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.BUY, BracketSystem.ContractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
+            }
+            if (action.Equals(ApplicationHelper.SHORT))
+            {
+                brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.SELL, BracketSystem.ContractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
+            }
 
             foreach (Order o in brackerOrder)
             {
@@ -511,7 +648,17 @@ namespace TradePlatform
  
         private void addMessageToLog(string text)
         {
+
+            //ApplicationHelper.log(ref tbLog, text);
+
+            if (text.Contains("RTVolume"))
+            {
+                double lastPrice = ApplicationHelper.ParseLastPrice(text);
+                ApplicationHelper.setLable(ref lbESM9Price, lastPrice.ToString());
+            }
+
             HandleErrorMessage(new ErrorMessage(-1, -1, text));
+
         }
 
 
@@ -536,6 +683,8 @@ namespace TradePlatform
 
 
             ApplicationHelper.log(ref tbLog, "PlaceTrailingStopOrder Submitted" );
+
+            PositionOpen = true;
         }
 
 
@@ -547,8 +696,24 @@ namespace TradePlatform
             float.TryParse(config.First(x => x.Key == ApplicationHelper.TrailingStopAmount).Value.ToString(), out TrailingStopAmount);
             int.TryParse(config.First(x => x.Key == ApplicationHelper.ContractQuantity).Value.ToString(), out ContractQuantity);
 
+
+            ApplicationHelper.log(ref tbLog, "Trailing Stop System Config BEGIN");
             ApplicationHelper.log(ref tbLog, "TrailingStopAmount : " + TrailingStopAmount);
             ApplicationHelper.log(ref tbLog, "ContractQuantity : " + ContractQuantity);
+            ApplicationHelper.log(ref tbLog, "Trailing Stop System Config END");
+        }
+
+        private void LoadBraketSystemConfig()
+        {
+
+            this.BracketSystem = new BracketSystem("Config/BracketSystem.xml");
+
+            ApplicationHelper.log(ref tbLog, "Bracket System Config BEGIN" );
+            ApplicationHelper.log(ref tbLog, "Contract Quantity: " + BracketSystem.ContractQuantity);
+            ApplicationHelper.log(ref tbLog, "ProfitTakerAmount: " + BracketSystem.ProfitTakerAmount);
+            ApplicationHelper.log(ref tbLog, "StopAmount: " + BracketSystem.StopAmount);
+            ApplicationHelper.log(ref tbLog, "Bracket System Config END");
+
         }
         #endregion
 
@@ -556,20 +721,31 @@ namespace TradePlatform
 
         private void HandleCustomException(ArgumentException ex)
         {
-            if (ex.ParamName.Equals(ApplicationHelper.ExceptionEmailNotification))
+            try
             {
-                HandleEmailException(ex);
+
+                if (ex.ParamName.Equals(ApplicationHelper.ExceptionEmailNotification))
+                {
+                    HandleEmailException(ex);
+                }
+                if (ex.ParamName.Equals(ApplicationHelper.ExceptionGetAmiSignal))
+                {
+                    HandleGetAmiSignal(ex);
+                }
+                else //If the exception is not custom, then stop program.
+                {
+                    ApplicationHelper.log(ref tbLog, "Not a custom error. System will stop.");
+                    ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+                    KeepRunning = false;
+                }
             }
-            if (ex.ParamName.Equals(ApplicationHelper.ExceptionGetAmiSignal))
+            catch (Exception e)
             {
-                HandleGetAmiSignal(ex);
-            }
-            else //If the exception is not custom, then stop program.
-            {
-                ApplicationHelper.log(ref tbLog, "Not a custom error. System will stop.");
+                ApplicationHelper.log(ref tbLog, "Unable to handle custom error. Details Error below.");
                 ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
-                KeepRunning = false;
+
             }
+
 
         }
 
@@ -579,9 +755,9 @@ namespace TradePlatform
             if (ex.Message.Contains(signalPath))
             {
                 ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.");
-                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+               //ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
 
-                Thread.Sleep(SleepSeconds * 1000);
+                //Thread.Sleep(SleepSeconds * 1000);
             }
             else //Exit application
             {
@@ -593,12 +769,11 @@ namespace TradePlatform
         private void HandleEmailException(ArgumentException ex)
         {
             ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Unable to send Email. The system will continue. This is not a fatal error. Details Error below.");
-            ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
-
-            //Stop sending email
-            Notification = ApplicationHelper.N;
+            //ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
         }
 
         #endregion
+
+  
     }
 }

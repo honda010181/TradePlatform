@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<StaggeringSystem>
+  <ProfitTakerAmount></ProfitTakerAmount>
+  <StopAmount>5</StopAmount>
+  <ContractQuantityPerStep>1</ContractQuantityPerStep>
+</StaggeringSystem>

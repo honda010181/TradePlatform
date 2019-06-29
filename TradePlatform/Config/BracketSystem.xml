@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<BraketSystem>
+  <ProfitTakerAmount>2</ProfitTakerAmount>
+  <StopAmount>3</StopAmount>
+  <ContractQuantity>3</ContractQuantity>
+</BraketSystem>

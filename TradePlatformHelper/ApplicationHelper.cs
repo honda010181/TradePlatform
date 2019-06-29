@@ -25,6 +25,8 @@ namespace TradePlatformHelper
         public static string MKT = "MKT";
         public static string BUY = "BUY";
         public static string SELL = "SELL";
+        public static string SHORT = "SHORT";
+        public static string COVER = "COVER";
         public static string TRAIL = "TRAIL";
         public static string IBContractPath = "IBContract.xml";
         public static string YES = "YES";
@@ -44,6 +46,8 @@ namespace TradePlatformHelper
         public static string TrailingStopPrice = "TrailingStopPrice";
         public static string ContractQuantity = "ContractQuantity";
         public static string TrailingStopAmount = "TrailingStopAmount";
+        public static string StopAmount = "StopAmount";
+        public static string ProfitTakerAmount = "ProfitTakerAmount";
 
         public static string Order_status_ApiPending = "ApiPending";
         public static string Order_status_PendingSubmit = "PendingSubmit";
@@ -56,9 +60,16 @@ namespace TradePlatformHelper
         public static string Order_status_Inactive = "Inactive";
 
         private delegate void SafeCallDelegate(ref TextBox tbLog, string msg);
+        private delegate void SafeCallDelegateLable(ref Label tbLog, string msg);
+        public enum marketReqID : int
+        {
+            ESM9 = 1000, MESM9 = 1001, M2KM9 = 1002, MNQM9 = 1003, NQM9 = 1004, RTYM9 = 1005
+        }
 
- 
-
+        public enum IBContract : int 
+        {
+            EminiSP500 = 2000
+        }
         public static void log(ref TextBox tbLog, string msg)
         {
             if (tbLog.InvokeRequired)
@@ -73,7 +84,49 @@ namespace TradePlatformHelper
             }            
         }
 
- 
+        public static void setLable(ref Label lb, string msg)
+        {
+            if (lb.InvokeRequired)
+            {
+                var d = new SafeCallDelegateLable(setLable);
+
+                lb.Invoke(d, new object[] { lb, msg });
+            }
+            else
+            {
+                lb.Text = msg;
+            }
+        }
+
+
+        public static double ParseLastPrice(string RTData)
+        {
+            double LastPrice =0;
+            try
+            {
+                foreach (string s in RTData.Split(','))
+                {
+                    if (s.ToUpper().Contains("VALUE:"))
+                    {
+                        int i = 0;
+                        foreach (string s1 in s.Split(' ',';'))
+                        {
+                            if (i == 2)
+                            {
+                                double.TryParse(s1,out LastPrice);
+                                return LastPrice;
+                            }
+                            i++;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LastPrice = 0;
+            }
+            return LastPrice;
+        }
         public static void log(string filePath, string msg)
         {
             try
