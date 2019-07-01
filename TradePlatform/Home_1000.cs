@@ -25,10 +25,10 @@ namespace TradePlatform
         private EReaderMonitorSignal signal = new EReaderMonitorSignal();
         private IBClient ibClient;
         private bool IsConnected { get; set; }
-        private List<AContract> AContracts = new List<AContract>();
+        //private List<AContract> AContracts = new List<AContract>();
 
-
-        private Dictionary<int, string> IBContract = new Dictionary<int, string>();
+ 
+        private Dictionary<string, object> IBContract = new Dictionary<string, object>();
         
         private BracketSystem BracketSystem;
         private string Notification;
@@ -80,7 +80,7 @@ namespace TradePlatform
             //Getting snapshot streaming every 11 seconds
             ibClient.TickPrice += ibClient_Tick;
             ibClient.TickSize += ibClient_Tick;
-            ibClient.TickString += (tickerId, tickType, value) => addMessageToLog("Tick string. Ticker Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + value + "\n");
+            ibClient.TickString += (tickerId, tickType, value) => addMessageToLog("Tick string. Ticker Id: " + tickerId + " , Type: " + TickType.getField(tickType) + ", Value: " + value + "\n");
             //ibClient.TickGeneric += (tickerId, field, value) => addMessageToLog("Tick Generic. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value + "\n");
             ibClient.TickEFP += (tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays, futureLastTradeDate, dividendImpact, dividendsToLastTradeDate) => addMessageToLog("TickEFP. " + tickerId + ", Type: " + tickType + ", BasisPoints: " + basisPoints + ", FormattedBasisPoints: " + formattedBasisPoints + ", ImpliedFuture: " + impliedFuture + ", HoldDays: " + holdDays + ", FutureLastTradeDate: " + futureLastTradeDate + ", DividendImpact: " + dividendImpact + ", DividendsToLastTradeDate: " + dividendsToLastTradeDate + "\n");
             ibClient.TickSnapshotEnd += tickerId => addMessageToLog("TickSnapshotEnd: " + tickerId + "\n");
@@ -93,17 +93,48 @@ namespace TradePlatform
         #region "Button Click"
         private void BtnMartketData_Click(object sender, EventArgs e)
         {
-            IBApi.Contract contract = new Contract();
-            contract.Symbol = "ES";
-            contract.SecType = "FUT";
-            contract.Exchange = "GLOBEX";
-            contract.Currency = "USD";
-            contract.LocalSymbol = "ESM9";
 
-            ApplicationHelper.log(ref tbLog,"Start streaming live data");
+            ApplicationHelper.log(ref tbLog, "Start streaming live data", Color.Black);
 
-            //Each regulatory snapshot made will incur a fee of 0.01 USD to the account. This applies to both live and paper accounts.
-            ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.ESM9),contract, "233", false, false, null);
+            foreach(KeyValuePair<string, object> c in IBContract)
+            {
+                IBApi.Contract contract = new Contract();
+                contract.Symbol = c.Key.ToString();
+
+                int index = 0;
+                foreach(string s in c.Value.ToString().Split('-'))
+                {
+                    if (index ==0 )
+                    {
+                        contract.LocalSymbol = s;
+                    }
+                    if (index == 1)
+                    {
+                        contract.Exchange = s;
+                    }
+                    if (index == 2)
+                    {
+                        contract.SecType = s;
+                    }
+                    if (index == 3)
+                    {
+                        contract.Currency = s;
+                    }
+                    index++;
+                }
+                //Each regulatory snapshot made will incur a fee of 0.01 USD to the account. This applies to both live and paper accounts.
+ 
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.ES))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.ES), contract, "233", false, false, null);
+                }
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.MES))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.MES), contract, "233", false, false, null);
+                }
+                               
+            }
+
         }
 
 
@@ -172,10 +203,10 @@ namespace TradePlatform
             contract.SecType = "FUT";
             contract.Exchange = "GLOBEX";
             contract.Currency = "USD";
-            contract.LocalSymbol = "ESM9";
+            contract.LocalSymbol = "ESU9";
 
             //PlaceTrailingStopOrder(contract,2875);
-            PlaceBracketOrder(contract, 2875,ApplicationHelper.BUY);
+            PlaceBracketOrder(contract, 2875,ApplicationHelper.SHORT);
         }
 
         #endregion
@@ -193,16 +224,16 @@ namespace TradePlatform
             if (ex != null)
             {
  
-                ApplicationHelper.log(ref tbLog,"Error: " + ex.ToString());
+                ApplicationHelper.log(ref tbLog,"Error: " + ex.ToString(), Color.Black);
                 return;
             }
 
             if (id == 0 || errorCode == 0)
             {
-                 ApplicationHelper.log(ref tbLog, "Error: "  +str);
+                 ApplicationHelper.log(ref tbLog, "Error: "  +str, Color.Black);
                 return;
             }
-            ApplicationHelper.log(ref tbLog, str);
+            ApplicationHelper.log(ref tbLog, str, Color.Black);
             ErrorMessage error = new ErrorMessage(id, errorCode, str);
 
             HandleErrorMessage(error);
@@ -266,7 +297,7 @@ namespace TradePlatform
             string str;
 
             str = string.Format("Order ID: {0} - Parent Order ID: {1} - Status: {2}", message.RequestId, message.ContractDetails.Contract.Symbol, message.ContractDetails.Contract.LocalSymbol,message.ContractDetails);
-            ApplicationHelper.log(ref tbLog, str);
+            ApplicationHelper.log(ref tbLog, str, Color.Black);
         }
         private void HandleContractDetailsEnd(ContractDetailsEndMessage message)
         {
@@ -283,7 +314,7 @@ namespace TradePlatform
             string str;
 
             str = string.Format("Order ID: {0} - Parent Order ID: {1} - Status: {2}", statusMessage.OrderId, statusMessage.ParentId, statusMessage.Status);
-            ApplicationHelper.log(ref tbLog, str);
+            ApplicationHelper.log(ref tbLog, str, Color.Black);
 
             CurrentOrderID = statusMessage.OrderId > CurrentOrderID ? statusMessage.OrderId : CurrentOrderID;
 
@@ -293,7 +324,7 @@ namespace TradePlatform
             string str;
 
             str = string.Format("Order ID: {0} - Contract: {1} - Status: {2}", openOrder.OrderId, openOrder.Contract, openOrder.OrderState);
-            ApplicationHelper.log(ref tbLog, str);
+            ApplicationHelper.log(ref tbLog, str, Color.Black);
             CurrentOrderID = openOrder.OrderId > CurrentOrderID ? openOrder.OrderId : CurrentOrderID;
         }
 
@@ -325,21 +356,21 @@ namespace TradePlatform
                 //Once engine start, do not allow to change selected contracts;
                 lbAllowedContract.Enabled = false;
 
-                ApplicationHelper.log(ref tbLog, "Allowed Contracts");
+                ApplicationHelper.log(ref tbLog, "Allowed Contracts" + "\n", Color.Black);
                 foreach (string s in AllowedContractList)
                 {
-                    ApplicationHelper.log(ref tbLog, s);
+                    ApplicationHelper.log(ref tbLog, s, Color.Black);
                 }
-                ApplicationHelper.log(ref tbLog, "DelayTolerance: " + DelayTolerance);
-                ApplicationHelper.log(ref tbLog, "Notification:" + Notification);
+                ApplicationHelper.log(ref tbLog, "DelayTolerance: " + DelayTolerance + "\n", Color.Black);
+                ApplicationHelper.log(ref tbLog, "Notification:" + Notification + "\n", Color.Black);
 
                 btnEngine.Text = "Stop Engine";
                 KeepRunning = true;
 
 
-                ApplicationHelper.log(ref tbLog, "Application mode: " + Mode);
-                ApplicationHelper.log(ref tbLog, "MaxTradesPerDay: " + MaxTradesPerDay);
-                ApplicationHelper.log(ref tbLog, "Engine Starts: " + DateTime.Now.ToString());
+                ApplicationHelper.log(ref tbLog, "Application mode: " + Mode +"\n", Color.Black);
+                ApplicationHelper.log(ref tbLog, "MaxTradesPerDay: " + MaxTradesPerDay + "\n", Color.Black);
+                ApplicationHelper.log(ref tbLog, "Engine Starts: " + DateTime.Now.ToString(), Color.Black);
 
 
                 foreach (string filePath in Directory.GetFiles(signalPath,"signal*.txt"))
@@ -394,6 +425,9 @@ namespace TradePlatform
                 MaxTradesPerDay = int.Parse(ApplicationHelper.getConfigValue("MaxTradesPerDay"));
                 DelaySecondUntillSignalValid = int.Parse(ApplicationHelper.getConfigValue("DelaySecondUntillSignalValid"));
 
+                IBContract = ApplicationHelper.ReadXML("Config/IBContract.xml");
+
+ 
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
                     if (! AllowedContractList.Contains(s))
@@ -407,7 +441,7 @@ namespace TradePlatform
             catch (Exception ex)
             {
                 MessageBox.Show("Fail to load config");
-                ApplicationHelper.log(ref tbLog, "FAIL TO LOAD CONFIG: " + ex.ToString());
+                ApplicationHelper.log(ref tbLog, "FAIL TO LOAD CONFIG: " + ex.ToString(), Color.Black);
                 this.Enabled = false;
 
             }
@@ -457,6 +491,13 @@ namespace TradePlatform
 
         private void RetrieveSignal(string signalPath)
         {
+            FileInfo fileInfo = new FileInfo(signalPath);
+            String fileName;
+
+            //This keeps track of valid contracts
+            List<AContract> AContracts = new List<AContract>();
+            fileName = fileInfo.Name;
+     
 
             if (signalPath.Length == 0)
             {
@@ -476,6 +517,8 @@ namespace TradePlatform
             //Set position
             PositionOpen = false;
             List<AContract> tempAContractList = new List<AContract>();
+ 
+
             while (KeepRunning)
             {
 
@@ -489,19 +532,7 @@ namespace TradePlatform
                     {
                         tempAContractList = ApplicationHelper.GetAmiSignalContracts(signalPath);
 
-                        var query = tempAContractList.GroupBy(x => new {Action =x.Action,Symbol= x.Symbol, SignalClose= x.SignalClose })
-                                    .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalClose = c.Key.SignalClose,count = c.Count()  })
-                        ;
-
-                        query.ToList();       
-                        
-                        foreach (var c in query.ToList())
-                        {
-                            if (c.count <= DelaySecondUntillSignalValid)
-                            {
-                                tempAContractList.RemoveAll(x => x.SignalClose == c.SignalClose);
-                            }
-                        }
+                        tempAContractList = filterSigal(tempAContractList);
 
                         foreach (AContract c in tempAContractList)
                         {
@@ -513,13 +544,23 @@ namespace TradePlatform
                                 AContracts.Add(c);
 
                                 //Check if the time delay is valid
-                                if (DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now) > DelayTolerance)
+                                if (DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now) >= DelayTolerance)
                                 {
-                                    ApplicationHelper.log(ref tbLog, string.Format("ERROR: SIGNAL TOO LATE: {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Delaytolerance: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, DelayTolerance, c.Action));
+                                    long timeDelay = DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, c.TimeStamp);
+
+                                    if (Mode.Equals(ApplicationHelper.TEST) & timeDelay <= DelayTolerance)
+                                    {
+                                        ApplicationHelper.log(ref tbLog, string.Format("{5} - {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Delay: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, timeDelay, c.Action, fileName), Color.Green);
+                                    }
+                                    else
+                                    {
+                                        ApplicationHelper.log(ref tbLog, string.Format("SIGNAL TOO LATE:{5} - {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Delay: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, timeDelay, c.Action, fileName), Color.OrangeRed);
+                                    }
+
                                     continue;
                                 }
 
-                                ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
+                                ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime), Color.Green);
 
                                 if (Notification.Trim().ToUpper().Equals(ApplicationHelper.Y))
                                 {
@@ -534,7 +575,7 @@ namespace TradePlatform
                                 //Check if contract is allowed to trade.
                                 if (AllowedContractList.Contains(contract.LocalSymbol))
                                 {
-                                    ApplicationHelper.log(ref tbLog, string.Format("Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
+                                    ApplicationHelper.log(ref tbLog, string.Format("Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency), Color.Black);
 
                                     //Write to the text file log.
                                     ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
@@ -566,7 +607,7 @@ namespace TradePlatform
                                 }
                                 else
                                 {
-                                    ApplicationHelper.log(ref tbLog, string.Format("NOT ALLOWED - TRADE WILL NOT OCCUR - Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency));
+                                    ApplicationHelper.log(ref tbLog, string.Format("NOT ALLOWED - TRADE WILL NOT OCCUR - Contract: {0} - {1} - {2} - {3}", contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency), Color.Black);
                                 }
 
                             }
@@ -582,14 +623,14 @@ namespace TradePlatform
                     {
 
                         //KeepRunning = false;
-                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+                        ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString(), Color.Black);
 
                         ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
                     }
                 }
                 catch (Exception ex)
                 {
-                    ApplicationHelper.log(ref tbLog, ex.Message.ToString());
+                    ApplicationHelper.log(ref tbLog, ex.Message.ToString(), Color.Black);
                 }
                 finally
                 {
@@ -601,15 +642,20 @@ namespace TradePlatform
 
             }
             EngineStatus = ApplicationHelper.STOP;
-            ApplicationHelper.log(ref tbLog, "Engine Ends: " + DateTime.Now.ToString());
+            ApplicationHelper.log(ref tbLog, "Engine Ends: " + DateTime.Now.ToString(), Color.Black);
         }
 
         private void PlaceBracketOrder(IBApi.Contract contract, double LatestClose, string action)
         {
 
             //Get latest close value from IB
-            double.TryParse( lbESM9Price.Text,out LatestClose);
-            
+            LatestClose = getLatestPrice(contract);
+
+            if (LatestClose ==0)
+            {
+                ApplicationHelper.log(ref tbLog, "Unable to determine price. Trade will not happen. ", Color.Black);
+                return;
+            }
             CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
                        
             BracketSystem.CurrentOrderID = CurrentOrderID;
@@ -621,11 +667,11 @@ namespace TradePlatform
             ProfitTakerPrice = action.Equals(ApplicationHelper.BUY) ? BracketSystem.ProfitTakerAmount + LatestClose : LatestClose - BracketSystem.ProfitTakerAmount;
             StopPrice = action.Equals(ApplicationHelper.BUY) ? LatestClose - Math.Abs(BracketSystem.StopAmount) : LatestClose + Math.Abs(BracketSystem.StopAmount);
 
-            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId);
-            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID);
-            ApplicationHelper.log(ref tbLog, "Enter Position Price: " + BracketSystem.EnterPostionPrice);
-            ApplicationHelper.log(ref tbLog, "Profit Taker Price: " + ProfitTakerPrice);
-            ApplicationHelper.log(ref tbLog, "Stop Price: " + StopPrice);
+            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId, Color.Black);
+            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID, Color.Black);
+            ApplicationHelper.log(ref tbLog, "Enter Position Price: " + BracketSystem.EnterPostionPrice, Color.Black);
+            ApplicationHelper.log(ref tbLog, "Profit Taker Price: " + ProfitTakerPrice, Color.Black);
+            ApplicationHelper.log(ref tbLog, "Stop Price: " + StopPrice, Color.Black);
 
             List<Order> brackerOrder = new List<Order>();
 
@@ -643,6 +689,8 @@ namespace TradePlatform
                 ibClient.ClientSocket.placeOrder(o.OrderId, contract, o);
             }
             CurrentOrderID = CurrentOrderID + 3;
+
+            ApplicationHelper.log(ref tbLog, "Trade has been placed."  , Color.Black);
         }
 
  
@@ -653,22 +701,52 @@ namespace TradePlatform
 
             if (text.Contains("RTVolume"))
             {
+
                 double lastPrice = ApplicationHelper.ParseLastPrice(text);
-                ApplicationHelper.setLable(ref lbESM9Price, lastPrice.ToString());
+
+                int ES =(int)ApplicationHelper.marketReqID.ES;
+                int MES = (int)ApplicationHelper.marketReqID.MES;
+
+
+                if (text.ToString().Contains(ES.ToString()))
+                {
+                    ApplicationHelper.setLable(ref lbESPrice, lastPrice.ToString());
+                }
+
+                if (text.ToString().Contains(MES.ToString()))
+                {
+                    ApplicationHelper.setLable(ref lbMESPrice, lastPrice.ToString());
+                }
             }
 
             HandleErrorMessage(new ErrorMessage(-1, -1, text));
 
         }
 
+        private double getLatestPrice(Contract contract)
+        {
+            double LatestPrice=0;
+
+            if(contract.Symbol.Equals(ApplicationHelper.ES))
+            {
+                double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
+            }
+
+            if (contract.Symbol.Equals(ApplicationHelper.MES))
+            {
+                double.TryParse(lbMESPrice.Text.ToString(), out LatestPrice);
+            }
+
+            return LatestPrice;
+        }
 
         #region "Trailing Stop"
         private void PlaceTrailingStopOrder(IBApi.Contract contract, double LatestClose)
         {
             CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
 
-            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId);
-            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID);
+            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId, Color.Black);
+            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID, Color.Black);
 
             //I want to get filled.
             LatestClose = LatestClose + 2;
@@ -682,7 +760,7 @@ namespace TradePlatform
             CurrentOrderID = CurrentOrderID + 3;
 
 
-            ApplicationHelper.log(ref tbLog, "PlaceTrailingStopOrder Submitted" );
+            ApplicationHelper.log(ref tbLog, "PlaceTrailingStopOrder Submitted", Color.Black);
 
             PositionOpen = true;
         }
@@ -697,10 +775,10 @@ namespace TradePlatform
             int.TryParse(config.First(x => x.Key == ApplicationHelper.ContractQuantity).Value.ToString(), out ContractQuantity);
 
 
-            ApplicationHelper.log(ref tbLog, "Trailing Stop System Config BEGIN");
-            ApplicationHelper.log(ref tbLog, "TrailingStopAmount : " + TrailingStopAmount);
-            ApplicationHelper.log(ref tbLog, "ContractQuantity : " + ContractQuantity);
-            ApplicationHelper.log(ref tbLog, "Trailing Stop System Config END");
+            ApplicationHelper.log(ref tbLog, "Trailing Stop System Config BEGIN", Color.Black);
+            ApplicationHelper.log(ref tbLog, "TrailingStopAmount : " + TrailingStopAmount, Color.Black);
+            ApplicationHelper.log(ref tbLog, "ContractQuantity : " + ContractQuantity, Color.Black);
+            ApplicationHelper.log(ref tbLog, "Trailing Stop System Config END", Color.Black);
         }
 
         private void LoadBraketSystemConfig()
@@ -708,11 +786,11 @@ namespace TradePlatform
 
             this.BracketSystem = new BracketSystem("Config/BracketSystem.xml");
 
-            ApplicationHelper.log(ref tbLog, "Bracket System Config BEGIN" );
-            ApplicationHelper.log(ref tbLog, "Contract Quantity: " + BracketSystem.ContractQuantity);
-            ApplicationHelper.log(ref tbLog, "ProfitTakerAmount: " + BracketSystem.ProfitTakerAmount);
-            ApplicationHelper.log(ref tbLog, "StopAmount: " + BracketSystem.StopAmount);
-            ApplicationHelper.log(ref tbLog, "Bracket System Config END");
+            ApplicationHelper.log(ref tbLog, "Bracket System Config BEGIN", Color.Black);
+            ApplicationHelper.log(ref tbLog, "Contract Quantity: " + BracketSystem.ContractQuantity, Color.Black);
+            ApplicationHelper.log(ref tbLog, "ProfitTakerAmount: " + BracketSystem.ProfitTakerAmount, Color.Black);
+            ApplicationHelper.log(ref tbLog, "StopAmount: " + BracketSystem.StopAmount, Color.Black);
+            ApplicationHelper.log(ref tbLog, "Bracket System Config END", Color.Black);
 
         }
         #endregion
@@ -734,15 +812,15 @@ namespace TradePlatform
                 }
                 else //If the exception is not custom, then stop program.
                 {
-                    ApplicationHelper.log(ref tbLog, "Not a custom error. System will stop.");
-                    ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+                    ApplicationHelper.log(ref tbLog, "Not a custom error. System will stop.", Color.Black);
+                    ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString(), Color.Black);
                     KeepRunning = false;
                 }
             }
             catch (Exception e)
             {
-                ApplicationHelper.log(ref tbLog, "Unable to handle custom error. Details Error below.");
-                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+                ApplicationHelper.log(ref tbLog, "Unable to handle custom error. Details Error below.", Color.Black);
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString(), Color.Black);
 
             }
 
@@ -754,7 +832,7 @@ namespace TradePlatform
             //If the IOException due to the file is being blocked. Continues
             if (ex.Message.Contains(signalPath))
             {
-                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.");
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.", Color.Black);
                //ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
 
                 //Thread.Sleep(SleepSeconds * 1000);
@@ -762,18 +840,74 @@ namespace TradePlatform
             else //Exit application
             {
                 KeepRunning = false;
-                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
+                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString(), Color.Black);
             }
         }
 
         private void HandleEmailException(ArgumentException ex)
         {
-            ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Unable to send Email. The system will continue. This is not a fatal error. Details Error below.");
+            ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Unable to send Email. The system will continue. This is not a fatal error. Details Error below.", Color.Black);
             //ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
         }
 
+
         #endregion
 
-  
+        #region "Validation and Filtering"
+        private List<AContract> filterSigal(List<AContract> tempAContractList)
+        {
+
+
+            ////Remove signals that have been processed.
+            //if (Mode.Equals(ApplicationHelper.PROD))
+            //{
+            //    foreach(AContract c in AContracts)
+            //    {
+            //        tempAContractList.RemoveAll(x => x.Symbol == c.Symbol & x.SignalClose == c.SignalClose);
+            //    }
+            //}
+                 
+            //List<AContract> temp = new List<AContract>(tempAContractList);
+
+            //foreach (AContract aContract in temp)
+            //{
+            //    aContract.TimeStamp =DateTime.Parse( string.Format(aContract.TimeStamp.ToString("MM/dd/yyyy HH:mm:00")));
+            //}
+
+            //Wait until the signal is fully formed.
+            //var query = tempAContractList.GroupBy(x => new {Action =x.Action,Symbol= x.Symbol, SignalClose= x.SignalClose, TimeStamp = x.TimeStamp })
+            //                        .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalClose = c.Key.SignalClose ,TimeStamp = c.Key.TimeStamp, count = c.Count()});
+
+            //            query.ToList();       
+
+            //            foreach (var c in query.ToList())
+            //            {
+            //                if (c.count <= DelaySecondUntillSignalValid)
+            //                {
+            //                    tempAContractList.RemoveAll(x => x.SignalClose == c.SignalClose & x.TimeStamp == c.TimeStamp);
+            //                }
+            //            }
+
+
+            var query = tempAContractList.GroupBy(x => new { Action = x.Action, Symbol = x.Symbol, SignalClose = x.SignalClose  })
+            .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalClose = c.Key.SignalClose , count = c.Count() });
+
+            query.ToList();
+
+            foreach (var c in query.ToList())
+            {
+                if (c.count <= DelaySecondUntillSignalValid)
+                {
+                    tempAContractList.RemoveAll(x => x.SignalClose == c.SignalClose  );
+                }
+            }
+
+            return tempAContractList;
+        }
+        #endregion
+
+ 
+
+
     }
 }

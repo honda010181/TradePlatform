@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <IBContract>
-  <EminiSP500>ESU9-GLOBEX-FUT-USD</EminiSP500>
+  <ES>ESU9-GLOBEX-FUT-USD</ES>
+  <MES>MESU9-GLOBEX-FUT-USD</MES>
 </IBContract>

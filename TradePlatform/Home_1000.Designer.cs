@@ -41,7 +41,6 @@
             this.tbPort = new System.Windows.Forms.TextBox();
             this.tbHost = new System.Windows.Forms.TextBox();
             this.btnConnect = new System.Windows.Forms.Button();
-            this.tbLog = new System.Windows.Forms.TextBox();
             this.lbAllowedContract = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -53,9 +52,10 @@
             this.lbM2KM9Price = new System.Windows.Forms.Label();
             this.lbRTYM9Price = new System.Windows.Forms.Label();
             this.lbNQM9Price = new System.Windows.Forms.Label();
-            this.lbMESM9Price = new System.Windows.Forms.Label();
-            this.lbESM9Price = new System.Windows.Forms.Label();
+            this.lbMESPrice = new System.Windows.Forms.Label();
+            this.lbESPrice = new System.Windows.Forms.Label();
             this.lbLastRun = new System.Windows.Forms.Label();
+            this.tbLog = new System.Windows.Forms.RichTextBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -190,15 +190,6 @@
             this.btnConnect.UseVisualStyleBackColor = true;
             this.btnConnect.Click += new System.EventHandler(this.BtnConnect_Click);
             // 
-            // tbLog
-            // 
-            this.tbLog.Location = new System.Drawing.Point(37, 226);
-            this.tbLog.Multiline = true;
-            this.tbLog.Name = "tbLog";
-            this.tbLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.tbLog.Size = new System.Drawing.Size(748, 361);
-            this.tbLog.TabIndex = 1;
-            // 
             // lbAllowedContract
             // 
             this.lbAllowedContract.FormattingEnabled = true;
@@ -214,18 +205,18 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(880, 226);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(36, 13);
+            this.label1.Size = new System.Drawing.Size(21, 13);
             this.label1.TabIndex = 3;
-            this.label1.Text = "ESM9";
+            this.label1.Text = "ES";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(880, 260);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(45, 13);
+            this.label2.Size = new System.Drawing.Size(30, 13);
             this.label2.TabIndex = 4;
-            this.label2.Text = "MESM9";
+            this.label2.Text = "MES";
             // 
             // label3
             // 
@@ -299,23 +290,23 @@
             this.lbNQM9Price.TabIndex = 11;
             this.lbNQM9Price.Text = "lbNQM9Price";
             // 
-            // lbMESM9Price
+            // lbMESPrice
             // 
-            this.lbMESM9Price.AutoSize = true;
-            this.lbMESM9Price.Location = new System.Drawing.Point(937, 260);
-            this.lbMESM9Price.Name = "lbMESM9Price";
-            this.lbMESM9Price.Size = new System.Drawing.Size(77, 13);
-            this.lbMESM9Price.TabIndex = 10;
-            this.lbMESM9Price.Text = "lbMESM9Price";
+            this.lbMESPrice.AutoSize = true;
+            this.lbMESPrice.Location = new System.Drawing.Point(937, 260);
+            this.lbMESPrice.Name = "lbMESPrice";
+            this.lbMESPrice.Size = new System.Drawing.Size(62, 13);
+            this.lbMESPrice.TabIndex = 10;
+            this.lbMESPrice.Text = "lbMESPrice";
             // 
-            // lbESM9Price
+            // lbESPrice
             // 
-            this.lbESM9Price.AutoSize = true;
-            this.lbESM9Price.Location = new System.Drawing.Point(937, 226);
-            this.lbESM9Price.Name = "lbESM9Price";
-            this.lbESM9Price.Size = new System.Drawing.Size(68, 13);
-            this.lbESM9Price.TabIndex = 9;
-            this.lbESM9Price.Text = "lbESM9Price";
+            this.lbESPrice.AutoSize = true;
+            this.lbESPrice.Location = new System.Drawing.Point(937, 226);
+            this.lbESPrice.Name = "lbESPrice";
+            this.lbESPrice.Size = new System.Drawing.Size(53, 13);
+            this.lbESPrice.TabIndex = 9;
+            this.lbESPrice.Text = "lbESPrice";
             // 
             // lbLastRun
             // 
@@ -326,18 +317,27 @@
             this.lbLastRun.TabIndex = 15;
             this.lbLastRun.Text = "Last Run: ";
             // 
+            // tbLog
+            // 
+            this.tbLog.Location = new System.Drawing.Point(13, 197);
+            this.tbLog.Name = "tbLog";
+            this.tbLog.Size = new System.Drawing.Size(758, 384);
+            this.tbLog.TabIndex = 16;
+            this.tbLog.Text = "";
+            // 
             // Home_1000
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1075, 656);
+            this.Controls.Add(this.tbLog);
             this.Controls.Add(this.lbLastRun);
             this.Controls.Add(this.lbMNQM9);
             this.Controls.Add(this.lbM2KM9Price);
             this.Controls.Add(this.lbRTYM9Price);
             this.Controls.Add(this.lbNQM9Price);
-            this.Controls.Add(this.lbMESM9Price);
-            this.Controls.Add(this.lbESM9Price);
+            this.Controls.Add(this.lbMESPrice);
+            this.Controls.Add(this.lbESPrice);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -345,7 +345,6 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lbAllowedContract);
-            this.Controls.Add(this.tbLog);
             this.Controls.Add(this.panel1);
             this.Name = "Home_1000";
             this.Text = "Form1";
@@ -369,7 +368,6 @@
         private System.Windows.Forms.TextBox tbHost;
         private System.Windows.Forms.Button btnContractDetails;
         private System.Windows.Forms.Button btnBuy;
-        private System.Windows.Forms.TextBox tbLog;
         private System.Windows.Forms.Button btnEngine;
         private System.Windows.Forms.TextBox tbMode;
         private System.Windows.Forms.ListBox lbAllowedContract;
@@ -384,9 +382,10 @@
         private System.Windows.Forms.Label lbM2KM9Price;
         private System.Windows.Forms.Label lbRTYM9Price;
         private System.Windows.Forms.Label lbNQM9Price;
-        private System.Windows.Forms.Label lbMESM9Price;
-        private System.Windows.Forms.Label lbESM9Price;
+        private System.Windows.Forms.Label lbMESPrice;
+        private System.Windows.Forms.Label lbESPrice;
         private System.Windows.Forms.Label lbLastRun;
+        private System.Windows.Forms.RichTextBox tbLog;
     }
 }
 

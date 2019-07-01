@@ -14,10 +14,13 @@ using System.Drawing;
 using System.Threading;
 using System.Net.Mail;
 using System.Xml;
+
 namespace TradePlatformHelper
 {
     public static class ApplicationHelper
     {
+        static object Lock = new object();
+
         public static string SUCCESS = "SUCCESS";
         public static string FAILURE = "FAILURE";
         public static string LMT = "LMT";
@@ -28,6 +31,8 @@ namespace TradePlatformHelper
         public static string SHORT = "SHORT";
         public static string COVER = "COVER";
         public static string TRAIL = "TRAIL";
+        public static string ES = "ES";
+        public static string MES = "MES";
         public static string IBContractPath = "IBContract.xml";
         public static string YES = "YES";
         public static string Y = "Y";
@@ -59,43 +64,50 @@ namespace TradePlatformHelper
         public static string Order_status_Cancelled = "Cancelled";
         public static string Order_status_Inactive = "Inactive";
 
-        private delegate void SafeCallDelegate(ref TextBox tbLog, string msg);
+        private delegate void SafeCallDelegate(ref RichTextBox tbLog, string msg, Color color);
         private delegate void SafeCallDelegateLable(ref Label tbLog, string msg);
         public enum marketReqID : int
         {
-            ESM9 = 1000, MESM9 = 1001, M2KM9 = 1002, MNQM9 = 1003, NQM9 = 1004, RTYM9 = 1005
+            ES = 1000, MES = 1001, M2K = 1002, MNQ = 1003, NQ = 1004, RTY = 1005
         }
 
         public enum IBContract : int 
         {
             EminiSP500 = 2000
         }
-        public static void log(ref TextBox tbLog, string msg)
+        public static void log(ref RichTextBox tbLog, string msg, Color color)
         {
-            if (tbLog.InvokeRequired)
-            {
-                var d = new SafeCallDelegate(log);
+ 
+                if (tbLog.InvokeRequired)
+                {
+                    var d = new SafeCallDelegate(log);
 
-                tbLog.Invoke(d, new object[] {tbLog,msg });
-            }
-            else
-            {
-                tbLog.AppendText(msg + "\n");
-            }            
-        }
+                    tbLog.Invoke(d, new object[] { tbLog, msg, color });
+                }
+                else
+                {
+                    tbLog.SelectionColor = color;
+                    tbLog.AppendText(msg + "\n");
+                }
+            }      
+ 
 
         public static void setLable(ref Label lb, string msg)
         {
-            if (lb.InvokeRequired)
-            {
-                var d = new SafeCallDelegateLable(setLable);
+ 
+                if (lb.InvokeRequired)
+                {
+                    var d = new SafeCallDelegateLable(setLable);
 
-                lb.Invoke(d, new object[] { lb, msg });
-            }
-            else
-            {
-                lb.Text = msg;
-            }
+                    lb.Invoke(d, new object[] { lb, msg });
+                }
+                else
+                {
+                    lb.Text = msg;
+                }
+
+ 
+
         }
 
 

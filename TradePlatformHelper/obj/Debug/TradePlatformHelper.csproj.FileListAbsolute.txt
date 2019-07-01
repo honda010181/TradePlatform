@@ -25,3 +25,4 @@ C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlat
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.dll
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.pdb
 C:\Users\vuha\Source\Repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.csprojAssemblyReference.cache
+C:\Users\vuha\Source\Repos\TradePlatform\TradePlatformHelper\bin\Debug\System.Drawing.dll
