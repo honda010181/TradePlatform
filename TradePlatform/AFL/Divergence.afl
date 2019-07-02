@@ -18,6 +18,65 @@ Modification history.
 4/10/2019   Change RSI to Ultimate indicator
 4/17/2019   Optimzied RSI 
 */
+ 
+function LinearSlope( period)
+{
+	x = Cum(1);
+	lastx = LastValue( x ); Daysback = period; aa = LastValue( LinRegIntercept( Close, Daysback) );
+	bb = LastValue( LinRegSlope( Close, Daysback ) );
+
+	y = Aa + bb * ( x - (Lastx - DaysBack) ); Plot( Close, "Close", colorBlack, styleCandle );
+	Plot( IIf( x >= (lastx - Daysback), y, -1e10 ), "LinReg", colorYellow );
+	
+	return bb; 
+}
+
+function LogSignalMetric(BuySell,filePath, period, delayMinute,writeMode)
+{
+
+    Slope = LinearSlope(6);
+	fh = fopen( filePath, writeMode,False );
+
+	dt =  DateTime(); 
+	timestamp = Now();
+ 
+	if (fh) 
+		{
+			text = "Symbol,"+ "Close," + "DateTime,TimeStamp,Action,LatestClose,LatestDateTime"   + "\n"; 
+			//fputs(text, fh);
+			for (i = 0; i< BarCount; i++)
+			{
+
+				if (BuySell == "BUY")
+				{
+				
+					//Say("Testing text to speech engine"); 
+					if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
+					{
+						text = name() +  "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Buy," +C[BarCount-1]+ "," +DateTimeToStr(dt[BarCount-1])+","+Slope +"\n"; 
+						fputs(text, fh);				
+					}
+
+				}
+			 
+			 	if (BuySell == "SELL")
+				{
+					if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
+					{
+						text = name()+ "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Sell,"+C[BarCount-1]+ "," +DateTimeToStr(dt[BarCount-1])+","+Slope +"\n"; 
+						fputs(text, fh);				
+					}
+				}
+			}
+	 
+			fclose( fh ); 
+		}
+	else 
+		{ 
+			Error("ERROR: File " + fileWithCommands + " cannot be open for writing."); 
+		}
+
+}
 
 
 //*************************Here are the time constraints*****************************************
@@ -39,11 +98,11 @@ InitialEquity = 100000; // Assume we start with 100 thousand dollars in equity
 MarginDeposit = 2875;    // For every 500 dollars in your account, you can buy 1 contract
 PointValue = 50;        // 1 point movement is a 50 gain (or loss)
 
-SetTradeDelays( 1, 1, 1, 1 );	//Trade happens at next open after trigger.
-BuyPrice=SellPrice=ShortPrice=CoverPrice=Open;	//Tells Amibroker to buy and sell based on open.
+//SetTradeDelays( 4, 4, 4, 4 );	//Trade happens at next open after trigger.
+//BuyPrice=SellPrice=ShortPrice=CoverPrice=Open;	//Tells Amibroker to buy and sell based on open.
 
-pointStop = 1; // Default is to use a 5-point stop 
-ApplyStop(stopTypeLoss,stopModePoint,pointStop,2);	//Stop loss a 5 points.
+pointStop =3; // Default is to use a 5-point stop 
+ApplyStop(stopTypeLoss,stopModePoint,pointStop,1);	//Stop loss a 5 points.
 
 // There are 2 ways to limit the number of contracts. Be default, we will use the first option
 SetPositionSize(3,spsShares); //Only trade 3 contracts
@@ -55,7 +114,7 @@ SetPositionSize(3,spsShares); //Only trade 3 contracts
 /*
 Period = 20 is the optimal value for this model
 */
-Period = Optimize("Change Period",20,5,100,5);
+Period = Optimize("Change Period",5,5,100,5);
 
 
 //rate of change of close
@@ -64,9 +123,9 @@ Period = Optimize("Change Period",20,5,100,5);
 PriceUp = C > Ref(C, -Period) ; 
 
 /*
-Indicator = 36 is the optimal value for this model
+Indicator = 26 is the optimal value for this model
 */
-IndicatorPeriod = Optimize("Indicator",36, 1,50,5);
+IndicatorPeriod = Optimize("Indicator",21, 1,50,5);
 IndicatorValue = RSI(IndicatorPeriod);
 
 /*Note: MACD histogram can be replaced with other indicator such as RSI
@@ -77,19 +136,15 @@ IndicatorValue = ROC(C,15);
 /*
 ChangePct = 21 is the optimal value for this model with MACD histogram.
 */
-ChangePct =  Optimize("Change Percentage",21,5,50,2);
+ChangePct =  Optimize("Change Percentage",23,5,50,2);
 
 StochBuySignal = Cross(StochK(), StochD());
 StochSellSignal = Cross( StochD(),StochK());
 
 
 
-//indPeakVal1 = Peak(IndicatorValue, ChangePct, 1); // Most recent peak value
-//indPeakBars1 = PeakBars(IndicatorValue, ChangePct, 1); // Bars since most recent peak
-
-indPeakVal1 =StochBuySignal;
-indPeakBars1 =0;
-
+indPeakVal1 = Peak(IndicatorValue, ChangePct, 1); // Most recent peak value
+indPeakBars1 = PeakBars(IndicatorValue, ChangePct, 1); // Bars since most recent peak
 indPeakVal2 = Peak(IndicatorValue, ChangePct, 2); // Second most recent peak value
 indPeakBars2 = PeakBars(IndicatorValue, ChangePct, 2); // Bars since second most recent peak
 
@@ -125,53 +180,99 @@ DivergenceBuy =NOT PriceUp AND isPositiveDivergence;
 /*
 If price is going up, and the indicator shows negative divergence, then sell
 */
-DivergenceSell = PriceUp AND isPositiveDivergence;
+DivergenceSell = PriceUp AND isNegativeDivergence;
+
+
+
+/*5 bar count exit*/
+
+barcountexit= 4;
+Rise = C>O;
+barCountExitResult = IIf(Ref(DivergenceBuy,-barcountexit)==1 AND Sum(RISE,barcountexit)<3 ,True,False );
+
+
 
 
 Buy = isBuyHours AND DivergenceBuy;
-Sell = isEndOfDayExit OR DivergenceSell;
+Sell = isEndOfDayExit OR DivergenceSell ;
 
-Buy = DivergenceBuy;
-Sell = DivergenceSell AND False;
+//Buy = DivergenceBuy;
+//Sell = DivergenceSell;
+
+//Buy = DivergenceBuy;
+//Sell = DivergenceSell AND False;
 
 /*Remove multiple buy/sell signal with Exrem*/
 //Buy = ExRem(Buy, Sell);
 //Sell = ExRem(Sell, Buy);
+Short = isBuyHours AND DivergenceSell;
+Cover = isEndOfDayExit OR DivergenceBuy ;
 
-Short = isBuyHours AND DivergenceBuy;
-Cover = isEndOfDayExit OR DivergenceSell;
+
+//Short =  DivergenceSell     ;
+//Cover =  DivergenceBuy;
+
+//Short =  DivergenceSell AND 1 == 2;
+//Cover =  DivergenceBuy AND 1 == 2;
+ 
 
 
-FileWithCommands = "C:\\Users\\vuha\\Documents\\Logs\\signal.txt";
-fh = fopen( FileWithCommands, "a",False );
+metricFile="C:\\Users\\vuha\\Documents\\Logs\\metrics.txt";
+
+signalFile = "C:\\Users\\vuha\\Documents\\Logs\\signal.txt";
+fh = fopen( signalFile, "a",False );
+
 dt =  DateTime(); 
 timestamp = Now();
-delayMinute = 60;
-
+delayMinute =20;
+ 
 LatestBar = BarIndex() == LastValue(BarIndex());
 if (fh) 
 	{
-		text = "Symbol,"+ "Close," + "DateTime,TimeStamp,Action"   + "\n"; 
+		text = "Symbol,"+ "Close," + "DateTime,TimeStamp,Action,LatestClose,LatestDateTime"   + "\n"; 
 		//fputs(text, fh);
-		for (i = 0; i< BarCount; i++)
+		for (i = 0 ; i< BarCount; i++)
 		{
+
 			if (Buy[i] )
 			{
 				//Say("Testing text to speech engine"); 
 				if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
 				{
-					text = name() + "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Buy" + "\n"; 
-					fputs(text, fh);				
+					text = name() +  "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Buy," +C[BarCount-1]+ "," +DateTimeToStr(dt[BarCount-1])+ "\n"; 
+					fputs(text, fh);	
+			 		LogSignalMetric("BUY",metricFile,6,delayMinute,"a");
 				}
 
 
 			}
-			if (Sell[i])
+			if (Sell[i]  AND 1 ==2)
 			{
 				if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
 				{
-					text = name() + "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Sell" + "\n"; 
-					fputs(text, fh);				
+					text = name()+ "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Sell,"+C[BarCount-1]+ "," +DateTimeToStr(dt[BarCount-1]) + "\n"; 
+					fputs(text, fh);
+					//LogSignalMetric("SELL",metricFile,6,delayMinute,"a");				
+				}
+			}
+			if (Short[i]  )
+			{
+				if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
+				{
+					text = name()+ "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Short,"+C[BarCount-1]+ "," +DateTimeToStr(dt[BarCount-1]) + "\n"; 
+					fputs(text, fh);
+					LogSignalMetric("Short",metricFile,6,delayMinute,"a");				
+				}
+			}
+			
+			
+			if (Cover[i] AND 1==2)
+			{
+				if ( DateTimeDiff( StrToDateTime (Now()) , dt[i]) < delayMinute*60 )
+				{
+					text = name()+ "," + C[i] + "," + DateTimeToStr(dt[i])+ "," + Now() +",Cover,"+C[BarCount-1]+ "," +DateTimeToStr(dt[BarCount-1]) + "\n"; 
+					fputs(text, fh);
+					//LogSignalMetric("Cover",metricFile,6,delayMinute,"a");				
 				}
 			}
 		}
@@ -182,7 +283,7 @@ else
 	{ 
 		Error("ERROR: File " + fileWithCommands + " cannot be open for writing."); 
 	}
-
+Filter = 	Buy;
 //Short = ExRem(Short, Cover);
 //Cover = ExRem(Cover, Short);
 /*
@@ -202,17 +303,17 @@ PlotShapes(IIf(isNegativeDivergence, shapeCircle, shapeNone),colorRed, 0,L, Offs
 //AddColumn( isPositiveDivergence, "isPositiveDivergence", 1.0, colorDefault, IIf(isPositiveDivergence, colorGreen, colorDefault ) ); 
 //AddColumn( PriceUp, "PriceUp", 1.0, colorDefault, IIf(PriceUp, colorDefault, colorDefault ) ); 
  */ 
-//AddColumn( isNegativeDivergence, "isNegativeDivergence", 1.0, colorDefault, IIf(isNegativeDivergence, colorRed , colorDefault ) ); 
-//AddColumn( isPositiveDivergence, "isPositiveDivergence", 1.0, colorDefault, IIf(isPositiveDivergence, colorGreen, colorDefault ) ); 
-//AddColumn( PriceUp, "PriceUp", 1.0, colorDefault, IIf(PriceUp, colorDefault, colorDefault ) ); 
+AddColumn( isNegativeDivergence, "isNegativeDivergence", 1.0, colorDefault, IIf(isNegativeDivergence, colorRed , colorDefault ) ); 
+AddColumn( isPositiveDivergence, "isPositiveDivergence", 1.0, colorDefault, IIf(isPositiveDivergence, colorGreen, colorDefault ) ); 
+AddColumn( PriceUp, "PriceUp", 1.0, colorDefault, IIf(PriceUp, colorDefault, colorDefault ) ); 
 PlotOHLC(Open, High, Low, Close, "OHLC Candle Chart", colorBlack, style = styleCandle | styleOwnScale);
-PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
-PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
-PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
-PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
-PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
-PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
- 
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-4);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-5);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-4);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=4);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=5);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-4);
+
 /*
 References:
 1 - http://www.amibroker.com/kb/2007/07/17/how-to-detect-the-divergences/
@@ -222,6 +323,3 @@ References:
 
 */
 
-_SECTION_BEGIN("Volume");
-Plot( Volume, _DEFAULT_NAME(), ParamColor("Color", colorBlueGrey ), ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick, maskHistogram  ) );
-_SECTION_END();
