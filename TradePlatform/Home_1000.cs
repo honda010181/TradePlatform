@@ -46,7 +46,7 @@ namespace TradePlatform
         private string FromEmailPassword;
         private string ToEmail;
         private int MaxTradesPerDay;
-        private int TradeCount = 0;
+ 
         private int DelaySecondUntillSignalValid;
         private bool PositionOpen { get; set; }
 
@@ -493,7 +493,7 @@ namespace TradePlatform
         {
             FileInfo fileInfo = new FileInfo(signalPath);
             String fileName;
-
+            int TradeCount = 0;
             //This keeps track of valid contracts
             List<AContract> AContracts = new List<AContract>();
             fileName = fileInfo.Name;
