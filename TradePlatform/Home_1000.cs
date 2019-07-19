@@ -16,6 +16,7 @@ using System.IO;
 using TradePlatformHelper.Objects;
 using Microsoft.VisualBasic;
 using TradePlatform.TradeSystems;
+
 namespace TradePlatform
 {
     public partial class Home_1000 : Form
@@ -31,7 +32,7 @@ namespace TradePlatform
         private Dictionary<string, object> IBContract = new Dictionary<string, object>();
         
         private BracketSystem BracketSystem;
-        private string Notification;
+        private string Notification = ApplicationHelper.Y;
         private string signalPath;
         private string ContractLog;
         private int CurrentOrderID;
@@ -46,7 +47,8 @@ namespace TradePlatform
         private string FromEmailPassword;
         private string ToEmail;
         private int MaxTradesPerDay;
- 
+        private string StartTradingHour;
+        private string EndTradingHour;
         private int DelaySecondUntillSignalValid;
         private bool PositionOpen { get; set; }
 
@@ -94,46 +96,7 @@ namespace TradePlatform
         private void BtnMartketData_Click(object sender, EventArgs e)
         {
 
-            ApplicationHelper.log(ref tbLog, "Start streaming live data", Color.Black);
-
-            foreach(KeyValuePair<string, object> c in IBContract)
-            {
-                IBApi.Contract contract = new Contract();
-                contract.Symbol = c.Key.ToString();
-
-                int index = 0;
-                foreach(string s in c.Value.ToString().Split('-'))
-                {
-                    if (index ==0 )
-                    {
-                        contract.LocalSymbol = s;
-                    }
-                    if (index == 1)
-                    {
-                        contract.Exchange = s;
-                    }
-                    if (index == 2)
-                    {
-                        contract.SecType = s;
-                    }
-                    if (index == 3)
-                    {
-                        contract.Currency = s;
-                    }
-                    index++;
-                }
-                //Each regulatory snapshot made will incur a fee of 0.01 USD to the account. This applies to both live and paper accounts.
- 
-                if (contract.Symbol.Trim().Equals(ApplicationHelper.ES))
-                {
-                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.ES), contract, "233", false, false, null);
-                }
-                if (contract.Symbol.Trim().Equals(ApplicationHelper.MES))
-                {
-                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.MES), contract, "233", false, false, null);
-                }
-                               
-            }
+            GetMarketData();
 
         }
 
@@ -171,8 +134,8 @@ namespace TradePlatform
 
                 reader.Start();
                 new Thread(() => { while (ibClient.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
- 
-                 
+
+                GetMarketData();
             }
             catch (Exception)
             {
@@ -375,6 +338,7 @@ namespace TradePlatform
 
                 foreach (string filePath in Directory.GetFiles(signalPath,"signal*.txt"))
                 {
+                    ApplicationHelper.log(ref tbLog,"Signal File: " + filePath, Color.Black);
                     Task t = Task.Run(() => RetrieveSignal(filePath));
                 }
  
@@ -418,12 +382,16 @@ namespace TradePlatform
                 ContractLog = ApplicationHelper.getConfigValue("ContractLog");
                 ApplicationLogFolder = ApplicationHelper.getConfigValue("ApplicationLogFolder");
                 DelayTolerance = int.Parse(ApplicationHelper.getConfigValue("DelayTolerance"));
-                Notification = ApplicationHelper.getConfigValue("Notification");
+                //Notification = ApplicationHelper.getConfigValue("Notification");
                 FromEmail = ApplicationHelper.getConfigValue("FromEmail");
                 FromEmailPassword = ApplicationHelper.getConfigValue("FromEmailPassword");
                 ToEmail = ApplicationHelper.getConfigValue("ToEmail");
                 MaxTradesPerDay = int.Parse(ApplicationHelper.getConfigValue("MaxTradesPerDay"));
                 DelaySecondUntillSignalValid = int.Parse(ApplicationHelper.getConfigValue("DelaySecondUntillSignalValid"));
+
+                StartTradingHour =  ApplicationHelper.getConfigValue("StartTradingHour");
+                EndTradingHour =  ApplicationHelper.getConfigValue("EndTradingHour");
+
 
                 IBContract = ApplicationHelper.ReadXML("Config/IBContract.xml");
 
@@ -437,6 +405,7 @@ namespace TradePlatform
                 }
 
                 LoadSystemConfig();
+                AfterLoadConfig();
             }
             catch (Exception ex)
             {
@@ -456,6 +425,29 @@ namespace TradePlatform
             ApplicationHelper.log(logFileName, tbLog.Text);
         }
 
+        private void BtnSignalPath_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+            folderBrowserDialog.ShowDialog();
+
+            signalPath = folderBrowserDialog.SelectedPath + "\\";
+            lbSignalPath.Text = signalPath;
+        }
+        private void TbDelayTolerance_TextChanged(object sender, EventArgs e)
+        {
+            int delay;
+            int.TryParse(tbDelayTolerance.Text.Trim().ToString(), out delay);
+
+            //if (delay > 25 || delay < 10)//never allow
+            //{
+            //    DelayTolerance = delay;
+            //}
+            //else
+            //{
+            //    MessageBox.Show("Invalid Delay Tolerance.");
+            //}
+
+        }
         private void InitializedControls()
         {
             //Initialize Contract Allowed List Box
@@ -474,6 +466,55 @@ namespace TradePlatform
             LoadBraketSystemConfig();
         }
 
+        private void AfterLoadConfig()
+        {
+            lbSignalPath.Text = signalPath;
+            tbDelayTolerance.Text = DelayTolerance.ToString();
+        }
+        private void GetMarketData()
+        {
+            ApplicationHelper.log(ref tbLog, "Start streaming live data", Color.Black);
+
+            foreach (KeyValuePair<string, object> c in IBContract)
+            {
+                IBApi.Contract contract = new Contract();
+                contract.Symbol = c.Key.ToString();
+
+                int index = 0;
+                foreach (string s in c.Value.ToString().Split('-'))
+                {
+                    if (index == 0)
+                    {
+                        contract.LocalSymbol = s;
+                    }
+                    if (index == 1)
+                    {
+                        contract.Exchange = s;
+                    }
+                    if (index == 2)
+                    {
+                        contract.SecType = s;
+                    }
+                    if (index == 3)
+                    {
+                        contract.Currency = s;
+                    }
+                    index++;
+                }
+                //Each regulatory snapshot made will incur a fee of 0.01 USD to the account. This applies to both live and paper accounts.
+
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.ES))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.ES), contract, "233", false, false, null);
+                }
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.MES))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.MES), contract, "233", false, false, null);
+                }
+
+            }
+
+        }
         private void LbAllowedContract_SelectedIndexChanged(object sender, EventArgs e)
         {
             AllowedContractList.Clear();
@@ -485,6 +526,18 @@ namespace TradePlatform
                 }
             }
             
+        }
+
+        private void CbNotification_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbNotification.Checked)
+            {
+                Notification = ApplicationHelper.Y;
+            }
+            else
+            {
+                Notification = ApplicationHelper.N;
+            }
         }
         #endregion
 
@@ -543,33 +596,48 @@ namespace TradePlatform
 
                                 AContracts.Add(c);
 
+                                Contract contract = new Contract();
+
+                                contract = ApplicationHelper.BuildContract(c.Symbol);
+
+                                long timeDelay = 0;
+
+
                                 //Check if the time delay is valid
                                 if (DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now) >= DelayTolerance)
                                 {
-                                    long timeDelay = DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, c.TimeStamp);
 
                                     if (Mode.Equals(ApplicationHelper.TEST) & timeDelay <= DelayTolerance)
                                     {
-                                        ApplicationHelper.log(ref tbLog, string.Format("{5} - {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Delay: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, timeDelay, c.Action, fileName), Color.Green);
+                                        timeDelay = DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, c.TimeStamp);
+                                        ApplicationHelper.log(ref tbLog, string.Format("{5} - {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Current Price: {6} - Delay: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, timeDelay, c.Action, fileName, getLatestPrice(contract)), Color.Green);
                                     }
                                     else
                                     {
+                                        timeDelay = DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now);
                                         ApplicationHelper.log(ref tbLog, string.Format("SIGNAL TOO LATE:{5} - {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Delay: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, timeDelay, c.Action, fileName), Color.OrangeRed);
                                     }
 
                                     continue;
                                 }
 
-                                ApplicationHelper.log(ref tbLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime), Color.Green);
+                                if (DateAndTime.Now.TimeOfDay < DateAndTime.TimeValue(StartTradingHour).TimeOfDay & DateAndTime.Now.TimeOfDay > DateAndTime.TimeValue(EndTradingHour).TimeOfDay)
+                                {
+                                    ApplicationHelper.log(ref tbLog, string.Format("{0} is out side of trading hour {1} and {2}", DateAndTime.Now.TimeOfDay, StartTradingHour, EndTradingHour), Color.OrangeRed);
+                                    continue;
+                                }
+
+
+                                timeDelay = DateAndTime.DateDiff(DateInterval.Minute, c.SignalDateTime, DateAndTime.Now);
+
+                                ApplicationHelper.log(ref tbLog, string.Format("{5} - {4} Signal: {0} - TimeStamp: {1} - Current Time: {2} - Current Price: {6} - Delay: {3}", c.SignalDateTime, c.TimeStamp, DateAndTime.Now, timeDelay, c.Action, fileName, getLatestPrice(contract)), Color.Green);
 
                                 if (Notification.Trim().ToUpper().Equals(ApplicationHelper.Y))
                                 {
                                     ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Ami Signal", tbLog.Text);
                                 }
 
-                                Contract contract = new Contract();
 
-                                contract = ApplicationHelper.BuildContract(c.Symbol);
 
 
                                 //Check if contract is allowed to trade.
@@ -595,6 +663,7 @@ namespace TradePlatform
                                             //PlaceTrailingStopOrder(contract, c.LatestClose);
                                             PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.BUY);
 
+                                            ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Trade Has Been Processed.", tbLog.Text);
                                         }
                                         if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SHORT))
                                         {
@@ -617,7 +686,7 @@ namespace TradePlatform
                     {
                         //These are not fatal exception and the system should keep running
                         HandleCustomException(ex);
-                        ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
+                        //ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Exception", tbLog.Text);
                     }
                     catch (Exception ex)
                     {
@@ -691,6 +760,7 @@ namespace TradePlatform
             CurrentOrderID = CurrentOrderID + 3;
 
             ApplicationHelper.log(ref tbLog, "Trade has been placed."  , Color.Black);
+                                   
         }
 
  
@@ -705,18 +775,12 @@ namespace TradePlatform
                 double lastPrice = ApplicationHelper.ParseLastPrice(text);
 
                 int ES =(int)ApplicationHelper.marketReqID.ES;
-                int MES = (int)ApplicationHelper.marketReqID.MES;
-
 
                 if (text.ToString().Contains(ES.ToString()))
                 {
                     ApplicationHelper.setLable(ref lbESPrice, lastPrice.ToString());
                 }
 
-                if (text.ToString().Contains(MES.ToString()))
-                {
-                    ApplicationHelper.setLable(ref lbMESPrice, lastPrice.ToString());
-                }
             }
 
             HandleErrorMessage(new ErrorMessage(-1, -1, text));
@@ -727,15 +791,9 @@ namespace TradePlatform
         {
             double LatestPrice=0;
 
-            if(contract.Symbol.Equals(ApplicationHelper.ES))
-            {
-                double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
-            }
 
-            if (contract.Symbol.Equals(ApplicationHelper.MES))
-            {
-                double.TryParse(lbMESPrice.Text.ToString(), out LatestPrice);
-            }
+            double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
+
 
             return LatestPrice;
         }
@@ -814,7 +872,7 @@ namespace TradePlatform
                 {
                     ApplicationHelper.log(ref tbLog, "Not a custom error. System will stop.", Color.Black);
                     ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString(), Color.Black);
-                    KeepRunning = false;
+                    //KeepRunning = false;
                 }
             }
             catch (Exception e)
@@ -832,14 +890,14 @@ namespace TradePlatform
             //If the IOException due to the file is being blocked. Continues
             if (ex.Message.Contains(signalPath))
             {
-                ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.", Color.Black);
+                //ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + "Cannot access the SignalPath. The system will continue. This is not a fatal error. Details Error below.", Color.Black);
                //ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString());
 
                 //Thread.Sleep(SleepSeconds * 1000);
             }
             else //Exit application
             {
-                KeepRunning = false;
+                //KeepRunning = false;
                 ApplicationHelper.log(ref tbLog, System.Reflection.MethodInfo.GetCurrentMethod() + " - " + ex.ToString(), Color.Black);
             }
         }
@@ -889,8 +947,8 @@ namespace TradePlatform
             //            }
 
 
-            var query = tempAContractList.GroupBy(x => new { Action = x.Action, Symbol = x.Symbol, SignalClose = x.SignalClose  })
-            .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalClose = c.Key.SignalClose , count = c.Count() });
+            var query = tempAContractList.GroupBy(x => new { Action = x.Action, Symbol = x.Symbol, SignalDateTime = x.SignalDateTime  })
+            .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalDateTime = c.Key.SignalDateTime, count = c.Count() });
 
             query.ToList();
 
@@ -898,16 +956,20 @@ namespace TradePlatform
             {
                 if (c.count <= DelaySecondUntillSignalValid)
                 {
-                    tempAContractList.RemoveAll(x => x.SignalClose == c.SignalClose  );
+                    tempAContractList.RemoveAll(x => x.SignalDateTime == c.SignalDateTime);
                 }
             }
 
             return tempAContractList;
         }
+
+
+
+
+
+
         #endregion
 
  
-
-
     }
 }
