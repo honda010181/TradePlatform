@@ -19,12 +19,14 @@ namespace TradePlatformHelper
 {
     public static class ApplicationHelper
     {
+        public static string DISABLELOG = "N";
         static object Lock = new object();
 
         public static string SUCCESS = "SUCCESS";
         public static string FAILURE = "FAILURE";
         public static string LMT = "LMT";
         public static string STP = "STP";
+        public static string STP_PRT= "STP PRT";
         public static string MKT = "MKT";
         public static string BUY = "BUY";
         public static string SELL = "SELL";
@@ -54,6 +56,23 @@ namespace TradePlatformHelper
         public static string StopAmount = "StopAmount";
         public static string ProfitTakerAmount = "ProfitTakerAmount";
 
+        public static string Step1 = "Step1";
+        public static string Step1ContractQuantity = "Step1ContractQuantity";
+        public static string Step1StopAmount = "Step1StopAmount";
+        public static string Step1ProfitTakerAmount = "Step1ProfitTakerAmount";
+        public static string Step2 = "Step2";
+        public static string Step2ContractQuantity = "Step2ContractQuantity";
+        public static string Step2StopAmount = "Step2StopAmount";
+        public static string Step2ProfitTakerAmount = "Step2ProfitTakerAmount";
+        public static string Step3 = "Step3";
+        public static string Step3ContractQuantity = "Step3ContractQuantity";
+        public static string Step3StopAmount = "Step3StopAmount";
+        public static string Step3ProfitTakerAmount = "Step3ProfitTakerAmount";
+        public static string Step4 = "Step4";
+        public static string Step4ContractQuantity = "Step4ContractQuantity";
+        public static string Step4StopAmount = "Step4StopAmount";
+        public static string Step4ProfitTakerAmount = "Step4ProfitTakerAmount";
+
         public static string Order_status_ApiPending = "ApiPending";
         public static string Order_status_PendingSubmit = "PendingSubmit";
         public static string Order_status_PendingCancel = "PendingCancel";
@@ -77,7 +96,10 @@ namespace TradePlatformHelper
         }
         public static void log(ref RichTextBox tbLog, string msg, Color color)
         {
- 
+            if (DISABLELOG==Y)
+            {
+                return;
+            }
                 if (tbLog.InvokeRequired)
                 {
                     var d = new SafeCallDelegate(log);
@@ -348,7 +370,7 @@ namespace TradePlatformHelper
         #region "Build Order"
         public static List<Order> BracketOrder(int parentOrderId, string action, double quantity, double limitPrice, double takeProfitLimitPrice, double stopLossPrice)
         {
-            if (Math.Abs(limitPrice - stopLossPrice) > 3 || Math.Abs(limitPrice - takeProfitLimitPrice) > 3)
+            if (Math.Abs(limitPrice - stopLossPrice) > 10 || Math.Abs(limitPrice - takeProfitLimitPrice) > 10)
             {
                 throw new System.ArgumentException("ApplicationHelper.BracketOrder - Price margin is too large", "PriceMargin");
             }
@@ -442,6 +464,26 @@ namespace TradePlatformHelper
 
         }
 
+
+        public static Order LimitOrder(int orderID, string action, double quantity, double limitPrice)
+        {
+
+            Order order = new Order();
+            try
+            {
+                order.OrderId = orderID;
+                order.Action = action;
+                order.OrderType = LMT;
+                order.TotalQuantity = quantity;
+                order.LmtPrice = limitPrice;
+                return order;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
 
 
         public static Order MarketOrder(int orderID, string action, double quantity)

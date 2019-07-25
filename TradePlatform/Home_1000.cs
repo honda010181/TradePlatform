@@ -16,7 +16,7 @@ using System.IO;
 using TradePlatformHelper.Objects;
 using Microsoft.VisualBasic;
 using TradePlatform.TradeSystems;
-
+using TradePlatform.Managers;
 namespace TradePlatform
 {
     public partial class Home_1000 : Form
@@ -32,6 +32,7 @@ namespace TradePlatform
         private Dictionary<string, object> IBContract = new Dictionary<string, object>();
         
         private BracketSystem BracketSystem;
+        private StaggeringSystem StaggeringSystem;
         private string Notification = ApplicationHelper.Y;
         private string signalPath;
         private string ContractLog;
@@ -54,13 +55,18 @@ namespace TradePlatform
 
         Dictionary<string, object> config;
         float TrailingStopAmount;
-        int ContractQuantity;
+        //int ContractQuantity;
+        OrderManager OrderManager  ;
 
+        Object lockObject = new object();
 
         public Home_1000()
         {
             InitializeComponent();
             ibClient = new IBClient(signal);
+            OrderManager =  new OrderManager(ibClient,ref tbLog);
+
+
             EngineStatus = ApplicationHelper.STOP;
             LoadConfig();
 
@@ -169,7 +175,7 @@ namespace TradePlatform
             contract.LocalSymbol = "ESU9";
 
             //PlaceTrailingStopOrder(contract,2875);
-            PlaceBracketOrder(contract, 2875,ApplicationHelper.SHORT);
+            PlaceBracketOrder(contract, 2875,ApplicationHelper.SHORT,0);
         }
 
         #endregion
@@ -275,7 +281,7 @@ namespace TradePlatform
         private void HandleOrderStatus(OrderStatusMessage statusMessage)
         {
             string str;
-
+            
             str = string.Format("Order ID: {0} - Parent Order ID: {1} - Status: {2}", statusMessage.OrderId, statusMessage.ParentId, statusMessage.Status);
             ApplicationHelper.log(ref tbLog, str, Color.Black);
 
@@ -286,7 +292,17 @@ namespace TradePlatform
         {
             string str;
 
-            str = string.Format("Order ID: {0} - Contract: {1} - Status: {2}", openOrder.OrderId, openOrder.Contract, openOrder.OrderState);
+
+                if (!OrderManager.Orders.Exists(x => x.OrderId == openOrder.OrderId))
+                {
+                    OrderManager.Orders.Add(openOrder);
+                }
+                else
+                {
+                    OrderManager.Orders.FirstOrDefault(x => x.OrderId == openOrder.OrderId).OrderState = openOrder.OrderState;
+                }
+  
+            str = string.Format("Order ID: {0} - Contract: {1} - Status: {2}", openOrder.OrderId, openOrder.Contract, openOrder.OrderState.Status);
             ApplicationHelper.log(ref tbLog, str, Color.Black);
             CurrentOrderID = openOrder.OrderId > CurrentOrderID ? openOrder.OrderId : CurrentOrderID;
         }
@@ -433,19 +449,28 @@ namespace TradePlatform
             signalPath = folderBrowserDialog.SelectedPath + "\\";
             lbSignalPath.Text = signalPath;
         }
-        private void TbDelayTolerance_TextChanged(object sender, EventArgs e)
+ 
+        private void TbDelayTolerance_Leave(object sender, EventArgs e)
         {
             int delay;
             int.TryParse(tbDelayTolerance.Text.Trim().ToString(), out delay);
 
-            //if (delay > 25 || delay < 10)//never allow
-            //{
-            //    DelayTolerance = delay;
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Invalid Delay Tolerance.");
-            //}
+            if (Mode.Equals(ApplicationHelper.PROD))
+            {
+                if ( delay <= 35 )
+                {
+                    DelayTolerance = delay;
+                }
+                else//never allow
+                {
+                    tbDelayTolerance.Text = DelayTolerance.ToString();
+                    MessageBox.Show("Delay Tolerance cannot be greater than 35.");
+                }
+            }
+            else
+            {
+                DelayTolerance = delay;
+            }
 
         }
         private void InitializedControls()
@@ -464,12 +489,18 @@ namespace TradePlatform
         {
             //LoadTrailingStopConfig();
             LoadBraketSystemConfig();
+            LoadStaggeringSystemConfig();
         }
 
         private void AfterLoadConfig()
         {
             lbSignalPath.Text = signalPath;
             tbDelayTolerance.Text = DelayTolerance.ToString();
+
+            lbStartTradingHour.Text = StartTradingHour;
+            lbEndTradingHour.Text = EndTradingHour;
+            //dtStartTradingHour.Text =DateAndTime.Today.ToString("yyyy/MM/dd ") + DateAndTime.TimeValue(StartTradingHour).ToString()  ;
+            //dtEndTradingHour.Text = DateAndTime.Today.ToString() + DateAndTime.TimeValue(EndTradingHour).ToString()   ;
         }
         private void GetMarketData()
         {
@@ -539,6 +570,11 @@ namespace TradePlatform
                 Notification = ApplicationHelper.N;
             }
         }
+
+        private void TbMode_DoubleClick(object sender, EventArgs e)
+        {
+            String result = Interaction.InputBox("Application Mode", "Application Mode", "Default", -1, -1);
+        }
         #endregion
 
 
@@ -549,6 +585,7 @@ namespace TradePlatform
             int TradeCount = 0;
             //This keeps track of valid contracts
             List<AContract> AContracts = new List<AContract>();
+
             fileName = fileInfo.Name;
      
 
@@ -593,6 +630,9 @@ namespace TradePlatform
 
                             if (!AContracts.Exists(x => x.Symbol == c.Symbol && x.SignalDateTime.Equals(c.SignalDateTime)))
                             {
+                                //Get all open orders.
+                                ibClient.ClientSocket.reqOpenOrders();
+
 
                                 AContracts.Add(c);
 
@@ -661,17 +701,32 @@ namespace TradePlatform
                                         if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.BUY))
                                         {
                                             //PlaceTrailingStopOrder(contract, c.LatestClose);
-                                            PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.BUY);
 
-                                            ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Trade Has Been Processed.", tbLog.Text);
+                                            lock(lockObject)
+                                            {
+                                                OrderManager.resolveOppositeDirectionOrder(ApplicationHelper.BUY, getLatestPrice(contract));
+                                                PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.BUY,0);
+                                                ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Trade Has Been Processed.", tbLog.Text);
+                                            }
+
                                         }
-                                        if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SHORT))
+                                        if (c.Action.Trim().ToUpper().Equals(ApplicationHelper.SELL))
                                         {
-                                            //PlaceTrailingStopOrder(contract, c.LatestClose);
-                                            PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.SHORT);
+                                            lock (lockObject)
+                                            {
+
+                                                OrderManager.resolveOppositeDirectionOrder(ApplicationHelper.SELL, getLatestPrice(contract));
+                                                PlaceBracketOrder(contract, c.LatestClose, ApplicationHelper.SELL,0);
+                                                ApplicationHelper.SendNotification(FromEmail, FromEmailPassword, ToEmail, "Trade Has Been Processed.", tbLog.Text);
+                                            }
+
                                         }
                                         //In case of multiple signals, sleep 3 seconds
                                         Thread.Sleep(3000);
+                                    }
+                                    else
+                                    {
+                                        ApplicationHelper.log(ref tbLog, "Max Trade Count Reached.", Color.Black);
                                     }
                                 }
                                 else
@@ -705,8 +760,7 @@ namespace TradePlatform
                 {
                     tempAContractList.Clear();
                 }
- 
-                
+
                 Thread.Sleep(SleepSeconds * 1000);
 
             }
@@ -714,7 +768,7 @@ namespace TradePlatform
             ApplicationHelper.log(ref tbLog, "Engine Ends: " + DateTime.Now.ToString(), Color.Black);
         }
 
-        private void PlaceBracketOrder(IBApi.Contract contract, double LatestClose, string action)
+        private void PlaceBracketOrder(IBApi.Contract contract, double LatestClose, string action, int contractQuantity)
         {
 
             //Get latest close value from IB
@@ -733,6 +787,8 @@ namespace TradePlatform
             Double ProfitTakerPrice ;
             Double StopPrice  ;
 
+            contractQuantity = contractQuantity > 0 ? contractQuantity : BracketSystem.ContractQuantity;
+
             ProfitTakerPrice = action.Equals(ApplicationHelper.BUY) ? BracketSystem.ProfitTakerAmount + LatestClose : LatestClose - BracketSystem.ProfitTakerAmount;
             StopPrice = action.Equals(ApplicationHelper.BUY) ? LatestClose - Math.Abs(BracketSystem.StopAmount) : LatestClose + Math.Abs(BracketSystem.StopAmount);
 
@@ -746,11 +802,11 @@ namespace TradePlatform
 
             if (action.Equals(ApplicationHelper.BUY))
             {
-                brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.BUY, BracketSystem.ContractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
+                brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.BUY, contractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
             }
-            if (action.Equals(ApplicationHelper.SHORT))
+            if (action.Equals(ApplicationHelper.SELL))
             {
-                brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.SELL, BracketSystem.ContractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
+                brackerOrder = ApplicationHelper.BracketOrder(++CurrentOrderID, ApplicationHelper.SELL, contractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
             }
 
             foreach (Order o in brackerOrder)
@@ -763,7 +819,28 @@ namespace TradePlatform
                                    
         }
 
- 
+        private void PlaceLimitOrder(IBApi.Contract contract, double LatestClose, string action, int contractQuantity)
+        {
+
+            //Get latest close value from IB
+            LatestClose = getLatestPrice(contract);
+
+            if (LatestClose == 0)
+            {
+                ApplicationHelper.log(ref tbLog, "Unable to determine price. Trade will not happen. ", Color.Black);
+                return;
+            }
+            CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
+
+            Order order = ApplicationHelper.LimitOrder(CurrentOrderID,action,contractQuantity,LatestClose);
+
+
+            ibClient.ClientSocket.placeOrder(CurrentOrderID,contract,order);
+
+            ApplicationHelper.log(ref tbLog, "Trade has been placed.", Color.Black);
+
+        }
+
         private void addMessageToLog(string text)
         {
 
@@ -801,26 +878,27 @@ namespace TradePlatform
         #region "Trailing Stop"
         private void PlaceTrailingStopOrder(IBApi.Contract contract, double LatestClose)
         {
-            CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
+            //CurrentOrderID = ibClient.NextOrderId > CurrentOrderID ? ibClient.NextOrderId : CurrentOrderID;
 
-            ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId, Color.Black);
-            ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID, Color.Black);
+            //int ContractQuantity =0;
+            //ApplicationHelper.log(ref tbLog, "ibClient.NextOrderId: " + ibClient.NextOrderId, Color.Black);
+            //ApplicationHelper.log(ref tbLog, "CurrentOrderID: " + CurrentOrderID, Color.Black);
 
-            //I want to get filled.
-            LatestClose = LatestClose + 2;
+            ////I want to get filled.
+            //LatestClose = LatestClose + 2;
 
-            List<Order> brackerOrder = ApplicationHelper.TrailingStopOrder(++CurrentOrderID, ApplicationHelper.BUY, LatestClose, ContractQuantity, TrailingStopAmount);
+            //List<Order> brackerOrder = ApplicationHelper.TrailingStopOrder(++CurrentOrderID, ApplicationHelper.BUY, LatestClose, ContractQuantity, TrailingStopAmount);
 
-            foreach (Order o in brackerOrder)
-            {
-                ibClient.ClientSocket.placeOrder(o.OrderId, contract, o);
-            }
-            CurrentOrderID = CurrentOrderID + 3;
+            //foreach (Order o in brackerOrder)
+            //{
+            //    ibClient.ClientSocket.placeOrder(o.OrderId, contract, o);
+            //}
+            //CurrentOrderID = CurrentOrderID + 3;
 
 
-            ApplicationHelper.log(ref tbLog, "PlaceTrailingStopOrder Submitted", Color.Black);
+            //ApplicationHelper.log(ref tbLog, "PlaceTrailingStopOrder Submitted", Color.Black);
 
-            PositionOpen = true;
+            //PositionOpen = true;
         }
 
 
@@ -830,12 +908,12 @@ namespace TradePlatform
             config = ApplicationHelper.ReadXML("Config/TraillingStopSystem.xml");
 
             float.TryParse(config.First(x => x.Key == ApplicationHelper.TrailingStopAmount).Value.ToString(), out TrailingStopAmount);
-            int.TryParse(config.First(x => x.Key == ApplicationHelper.ContractQuantity).Value.ToString(), out ContractQuantity);
+            //int.TryParse(config.First(x => x.Key == ApplicationHelper.ContractQuantity).Value.ToString(), out ContractQuantity);
 
 
             ApplicationHelper.log(ref tbLog, "Trailing Stop System Config BEGIN", Color.Black);
             ApplicationHelper.log(ref tbLog, "TrailingStopAmount : " + TrailingStopAmount, Color.Black);
-            ApplicationHelper.log(ref tbLog, "ContractQuantity : " + ContractQuantity, Color.Black);
+            //ApplicationHelper.log(ref tbLog, "ContractQuantity : " + ContractQuantity, Color.Black);
             ApplicationHelper.log(ref tbLog, "Trailing Stop System Config END", Color.Black);
         }
 
@@ -849,6 +927,19 @@ namespace TradePlatform
             ApplicationHelper.log(ref tbLog, "ProfitTakerAmount: " + BracketSystem.ProfitTakerAmount, Color.Black);
             ApplicationHelper.log(ref tbLog, "StopAmount: " + BracketSystem.StopAmount, Color.Black);
             ApplicationHelper.log(ref tbLog, "Bracket System Config END", Color.Black);
+
+        }
+
+        private void LoadStaggeringSystemConfig()
+        {
+
+            this.StaggeringSystem = new StaggeringSystem("Config/StaggeringSystem.xml");
+
+            //ApplicationHelper.log(ref tbLog, "Bracket System Config BEGIN", Color.Black);
+            //ApplicationHelper.log(ref tbLog, "Contract Quantity: " + BracketSystem.ContractQuantity, Color.Black);
+            //ApplicationHelper.log(ref tbLog, "ProfitTakerAmount: " + BracketSystem.ProfitTakerAmount, Color.Black);
+            //ApplicationHelper.log(ref tbLog, "StopAmount: " + BracketSystem.StopAmount, Color.Black);
+            //ApplicationHelper.log(ref tbLog, "Bracket System Config END", Color.Black);
 
         }
         #endregion
@@ -962,12 +1053,6 @@ namespace TradePlatform
 
             return tempAContractList;
         }
-
-
-
-
-
-
         #endregion
 
  

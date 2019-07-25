@@ -29,6 +29,11 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.lbEndTradingHour = new System.Windows.Forms.Label();
+            this.lbStartTradingHour = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbDelayTolerance = new System.Windows.Forms.TextBox();
+            this.lbDelayTolerance = new System.Windows.Forms.Label();
             this.lbSignalPath = new System.Windows.Forms.Label();
             this.btnSignalPath = new System.Windows.Forms.Button();
             this.cbNotification = new System.Windows.Forms.CheckBox();
@@ -49,13 +54,14 @@
             this.lbESPrice = new System.Windows.Forms.Label();
             this.lbLastRun = new System.Windows.Forms.Label();
             this.tbLog = new System.Windows.Forms.RichTextBox();
-            this.lbDelayTolerance = new System.Windows.Forms.Label();
-            this.tbDelayTolerance = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.lbEndTradingHour);
+            this.panel1.Controls.Add(this.lbStartTradingHour);
+            this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.tbDelayTolerance);
             this.panel1.Controls.Add(this.lbDelayTolerance);
             this.panel1.Controls.Add(this.lbSignalPath);
@@ -76,13 +82,59 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1219, 191);
+            this.panel1.Size = new System.Drawing.Size(1219, 171);
             this.panel1.TabIndex = 0;
+            // 
+            // lbEndTradingHour
+            // 
+            this.lbEndTradingHour.AutoSize = true;
+            this.lbEndTradingHour.Enabled = false;
+            this.lbEndTradingHour.Location = new System.Drawing.Point(347, 100);
+            this.lbEndTradingHour.Name = "lbEndTradingHour";
+            this.lbEndTradingHour.Size = new System.Drawing.Size(52, 13);
+            this.lbEndTradingHour.TabIndex = 23;
+            this.lbEndTradingHour.Text = "End Hour";
+            // 
+            // lbStartTradingHour
+            // 
+            this.lbStartTradingHour.AutoSize = true;
+            this.lbStartTradingHour.Location = new System.Drawing.Point(271, 100);
+            this.lbStartTradingHour.Name = "lbStartTradingHour";
+            this.lbStartTradingHour.Size = new System.Drawing.Size(55, 13);
+            this.lbStartTradingHour.TabIndex = 22;
+            this.lbStartTradingHour.Text = "Start Hour";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(193, 100);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(72, 13);
+            this.label2.TabIndex = 21;
+            this.label2.Text = "Trading Hour:";
+            // 
+            // tbDelayTolerance
+            // 
+            this.tbDelayTolerance.Location = new System.Drawing.Point(113, 97);
+            this.tbDelayTolerance.MaxLength = 2;
+            this.tbDelayTolerance.Name = "tbDelayTolerance";
+            this.tbDelayTolerance.Size = new System.Drawing.Size(58, 20);
+            this.tbDelayTolerance.TabIndex = 16;
+            //this.tbDelayTolerance.Leave += new System.EventHandler(this.TbDelayTolerance_Leave);
+            // 
+            // lbDelayTolerance
+            // 
+            this.lbDelayTolerance.AutoSize = true;
+            this.lbDelayTolerance.Location = new System.Drawing.Point(12, 100);
+            this.lbDelayTolerance.Name = "lbDelayTolerance";
+            this.lbDelayTolerance.Size = new System.Drawing.Size(88, 13);
+            this.lbDelayTolerance.TabIndex = 15;
+            this.lbDelayTolerance.Text = "Delay Tolerance:";
             // 
             // lbSignalPath
             // 
             this.lbSignalPath.AutoSize = true;
-            this.lbSignalPath.Location = new System.Drawing.Point(110, 100);
+            this.lbSignalPath.Location = new System.Drawing.Point(110, 68);
             this.lbSignalPath.Name = "lbSignalPath";
             this.lbSignalPath.Size = new System.Drawing.Size(61, 13);
             this.lbSignalPath.TabIndex = 14;
@@ -90,7 +142,7 @@
             // 
             // btnSignalPath
             // 
-            this.btnSignalPath.Location = new System.Drawing.Point(14, 90);
+            this.btnSignalPath.Location = new System.Drawing.Point(12, 58);
             this.btnSignalPath.Name = "btnSignalPath";
             this.btnSignalPath.Size = new System.Drawing.Size(79, 23);
             this.btnSignalPath.TabIndex = 13;
@@ -103,7 +155,7 @@
             this.cbNotification.AutoSize = true;
             this.cbNotification.Checked = true;
             this.cbNotification.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbNotification.Location = new System.Drawing.Point(14, 53);
+            this.cbNotification.Location = new System.Drawing.Point(12, 35);
             this.cbNotification.Name = "cbNotification";
             this.cbNotification.Size = new System.Drawing.Size(79, 17);
             this.cbNotification.TabIndex = 12;
@@ -124,12 +176,12 @@
             // tbMode
             // 
             this.tbMode.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tbMode.Enabled = false;
             this.tbMode.Location = new System.Drawing.Point(0, 0);
             this.tbMode.Name = "tbMode";
             this.tbMode.Size = new System.Drawing.Size(1219, 20);
             this.tbMode.TabIndex = 10;
             this.tbMode.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            //this.tbMode.DoubleClick += new System.EventHandler(this.TbMode_DoubleClick);
             // 
             // btnEngine
             // 
@@ -269,24 +321,6 @@
             this.tbLog.TabIndex = 16;
             this.tbLog.Text = "";
             // 
-            // lbDelayTolerance
-            // 
-            this.lbDelayTolerance.AutoSize = true;
-            this.lbDelayTolerance.Location = new System.Drawing.Point(12, 141);
-            this.lbDelayTolerance.Name = "lbDelayTolerance";
-            this.lbDelayTolerance.Size = new System.Drawing.Size(88, 13);
-            this.lbDelayTolerance.TabIndex = 15;
-            this.lbDelayTolerance.Text = "Delay Tolerance:";
-            // 
-            // tbDelayTolerance
-            // 
-            this.tbDelayTolerance.Location = new System.Drawing.Point(113, 134);
-            this.tbDelayTolerance.MaxLength = 2;
-            this.tbDelayTolerance.Name = "tbDelayTolerance";
-            this.tbDelayTolerance.Size = new System.Drawing.Size(58, 20);
-            this.tbDelayTolerance.TabIndex = 16;
-            this.tbDelayTolerance.TextChanged += new System.EventHandler(this.TbDelayTolerance_TextChanged);
-            // 
             // Home_1000
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -333,6 +367,9 @@
         private System.Windows.Forms.Button btnSignalPath;
         private System.Windows.Forms.TextBox tbDelayTolerance;
         private System.Windows.Forms.Label lbDelayTolerance;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lbEndTradingHour;
+        private System.Windows.Forms.Label lbStartTradingHour;
     }
 }
 

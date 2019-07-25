@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomModels\OrderModel.cs" />
     <Compile Include="Home_1000.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -124,6 +125,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TradeSystems\BracketSystem.cs" />
+    <Compile Include="TradeSystems\StaggeringSystem.cs" />
     <Compile Include="TradeSystems\TraillingStopSystem.cs" />
     <Compile Include="ui\TickReqParamsMessage.cs" />
     <EmbeddedResource Include="Home_1000.resx">
