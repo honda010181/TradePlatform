@@ -29,6 +29,9 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.gbTradeSystems = new System.Windows.Forms.GroupBox();
+            this.rbBracket = new System.Windows.Forms.RadioButton();
+            this.rbStaggering = new System.Windows.Forms.RadioButton();
             this.lbEndTradingHour = new System.Windows.Forms.Label();
             this.lbStartTradingHour = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -54,11 +57,14 @@
             this.lbESPrice = new System.Windows.Forms.Label();
             this.lbLastRun = new System.Windows.Forms.Label();
             this.tbLog = new System.Windows.Forms.RichTextBox();
+            this.btnChangeSetting = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
+            this.gbTradeSystems.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.gbTradeSystems);
             this.panel1.Controls.Add(this.lbEndTradingHour);
             this.panel1.Controls.Add(this.lbStartTradingHour);
             this.panel1.Controls.Add(this.label2);
@@ -82,8 +88,42 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1219, 171);
+            this.panel1.Size = new System.Drawing.Size(1219, 191);
             this.panel1.TabIndex = 0;
+            // 
+            // gbTradeSystems
+            // 
+            this.gbTradeSystems.Controls.Add(this.btnChangeSetting);
+            this.gbTradeSystems.Controls.Add(this.rbBracket);
+            this.gbTradeSystems.Controls.Add(this.rbStaggering);
+            this.gbTradeSystems.Location = new System.Drawing.Point(15, 136);
+            this.gbTradeSystems.Name = "gbTradeSystems";
+            this.gbTradeSystems.Size = new System.Drawing.Size(294, 52);
+            this.gbTradeSystems.TabIndex = 24;
+            this.gbTradeSystems.TabStop = false;
+            this.gbTradeSystems.Text = "Trade Systems";
+            // 
+            // rbBracket
+            // 
+            this.rbBracket.AutoSize = true;
+            this.rbBracket.Checked = true;
+            this.rbBracket.Location = new System.Drawing.Point(98, 29);
+            this.rbBracket.Name = "rbBracket";
+            this.rbBracket.Size = new System.Drawing.Size(62, 17);
+            this.rbBracket.TabIndex = 1;
+            this.rbBracket.TabStop = true;
+            this.rbBracket.Text = "Bracket";
+            this.rbBracket.UseVisualStyleBackColor = true;
+            // 
+            // rbStaggering
+            // 
+            this.rbStaggering.AutoSize = true;
+            this.rbStaggering.Location = new System.Drawing.Point(7, 29);
+            this.rbStaggering.Name = "rbStaggering";
+            this.rbStaggering.Size = new System.Drawing.Size(76, 17);
+            this.rbStaggering.TabIndex = 0;
+            this.rbStaggering.Text = "Staggering";
+            this.rbStaggering.UseVisualStyleBackColor = true;
             // 
             // lbEndTradingHour
             // 
@@ -120,7 +160,6 @@
             this.tbDelayTolerance.Name = "tbDelayTolerance";
             this.tbDelayTolerance.Size = new System.Drawing.Size(58, 20);
             this.tbDelayTolerance.TabIndex = 16;
-            //this.tbDelayTolerance.Leave += new System.EventHandler(this.TbDelayTolerance_Leave);
             // 
             // lbDelayTolerance
             // 
@@ -181,7 +220,6 @@
             this.tbMode.Size = new System.Drawing.Size(1219, 20);
             this.tbMode.TabIndex = 10;
             this.tbMode.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            //this.tbMode.DoubleClick += new System.EventHandler(this.TbMode_DoubleClick);
             // 
             // btnEngine
             // 
@@ -321,6 +359,16 @@
             this.tbLog.TabIndex = 16;
             this.tbLog.Text = "";
             // 
+            // btnChangeSetting
+            // 
+            this.btnChangeSetting.Location = new System.Drawing.Point(181, 23);
+            this.btnChangeSetting.Name = "btnChangeSetting";
+            this.btnChangeSetting.Size = new System.Drawing.Size(79, 23);
+            this.btnChangeSetting.TabIndex = 25;
+            this.btnChangeSetting.Text = "Setting";
+            this.btnChangeSetting.UseVisualStyleBackColor = true;
+            this.btnChangeSetting.Click += new System.EventHandler(this.BtnChangeSetting_Click);
+            // 
             // Home_1000
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -337,6 +385,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Home_1000_FormClosing);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.gbTradeSystems.ResumeLayout(false);
+            this.gbTradeSystems.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -370,6 +420,10 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label lbEndTradingHour;
         private System.Windows.Forms.Label lbStartTradingHour;
+        private System.Windows.Forms.GroupBox gbTradeSystems;
+        private System.Windows.Forms.RadioButton rbBracket;
+        private System.Windows.Forms.RadioButton rbStaggering;
+        private System.Windows.Forms.Button btnChangeSetting;
     }
 }
 

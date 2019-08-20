@@ -21,7 +21,7 @@ namespace TradePlatformHelper
     {
         public static string DISABLELOG = "N";
         static object Lock = new object();
-
+        public static int ERROR_CODE = -9000;
         public static string SUCCESS = "SUCCESS";
         public static string FAILURE = "FAILURE";
         public static string LMT = "LMT";
@@ -80,8 +80,10 @@ namespace TradePlatformHelper
         public static string Order_status_Submitted = "Submitted";
         public static string Order_status_ApiCancelled = "ApiCancelled";
         public static string Order_status_Filled = "Filled";
-        public static string Order_status_Cancelled = "Cancelled";
+        public static string Order_status_Cancelled = "Canceled";  
         public static string Order_status_Inactive = "Inactive";
+        public static string BRACKET_SYSTEM = "BRACKET_SYSTEM";
+        public static string STAGGERING_SYSTEM = "STAGGERING_SYSTEM";
 
         private delegate void SafeCallDelegate(ref RichTextBox tbLog, string msg, Color color);
         private delegate void SafeCallDelegateLable(ref Label tbLog, string msg);
@@ -96,6 +98,7 @@ namespace TradePlatformHelper
         }
         public static void log(ref RichTextBox tbLog, string msg, Color color)
         {
+
             if (DISABLELOG==Y)
             {
                 return;
@@ -108,6 +111,7 @@ namespace TradePlatformHelper
                 }
                 else
                 {
+                    msg = DateTime.Now.ToString() + "-" + msg;
                     tbLog.SelectionColor = color;
                     tbLog.AppendText(msg + "\n");
                 }
@@ -132,7 +136,20 @@ namespace TradePlatformHelper
 
         }
 
+        public static int GetIntegerFromTextBox(ref TextBox textBox)
+        {
+            int value;
+            if (ApplicationHelper.IsInteger(textBox.Text.ToString()))
+            {
+                value = int.Parse(textBox.Text.ToString());
+            }
+            else
+            {
+                value = ERROR_CODE;
+            }
 
+            return value;
+        }
         public static double ParseLastPrice(string RTData)
         {
             double LastPrice =0;
@@ -206,6 +223,18 @@ namespace TradePlatformHelper
             return value;
         }
 
+        public static Boolean IsInteger(string str)
+        {
+            int i;
+            if (int.TryParse(str, out i))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
         public static List<AContract> GetAmiSignalContracts(string souce)
         {
             List<AContract> contracts = new List<AContract>();
@@ -253,6 +282,7 @@ namespace TradePlatformHelper
                                 default:
                                     break;
                             }
+                            c.ParentOrderID = 0;
                             index++;
                         }
                         contracts.Add(c);

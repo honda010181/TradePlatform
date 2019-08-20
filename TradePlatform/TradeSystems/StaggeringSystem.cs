@@ -9,7 +9,7 @@ namespace TradePlatform.TradeSystems
 {
     public class StaggeringSystem
     {
-        Dictionary<int, StepConfig> StepConfig = new Dictionary<int, StepConfig>();
+     public   Dictionary<int, StepConfig> StepConfig = new Dictionary<int, StepConfig>();
 
 
         public Dictionary<string, object> config;

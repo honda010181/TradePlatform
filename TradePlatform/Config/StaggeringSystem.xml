@@ -2,22 +2,22 @@
 <StaggeringSystem>
   <Step1>1</Step1>
   <Step1ProfitTakerAmount>1</Step1ProfitTakerAmount>
-  <Step1StopAmount>1</Step1StopAmount>
+  <Step1StopAmount>5</Step1StopAmount>
   <Step1ContractQuantity>1</Step1ContractQuantity>
 
   <Step2>2</Step2>
   <Step2ProfitTakerAmount>2</Step2ProfitTakerAmount>
-  <Step2StopAmount>2</Step2StopAmount>
-  <Step2ContractQuantity>2</Step2ContractQuantity>
+  <Step2StopAmount>5</Step2StopAmount>
+  <Step2ContractQuantity>1</Step2ContractQuantity>
 
   <Step3>3</Step3>
   <Step3ProfitTakerAmount>3</Step3ProfitTakerAmount>
   <Step3StopAmount>3</Step3StopAmount>
-  <Step3ContractQuantity>3</Step3ContractQuantity>
+  <Step3ContractQuantity>0</Step3ContractQuantity>
 
   <Step4>4</Step4>
   <Step4ProfitTakerAmount>4</Step4ProfitTakerAmount>
   <Step4StopAmount>4</Step4StopAmount>
-  <Step4ContractQuantity>4</Step4ContractQuantity>
+  <Step4ContractQuantity>0</Step4ContractQuantity>
   
 </StaggeringSystem>

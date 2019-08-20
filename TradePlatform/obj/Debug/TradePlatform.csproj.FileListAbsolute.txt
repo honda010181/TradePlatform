@@ -48,3 +48,5 @@ C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.c
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.csproj.CopyComplete
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.exe
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.pdb
+C:\Users\vuha\Source\Repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.BracketSetting.resources
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.StaggerSetting.resources

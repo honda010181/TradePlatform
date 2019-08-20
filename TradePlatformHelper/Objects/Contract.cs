@@ -16,5 +16,6 @@ namespace TradePlatformHelper.Objects
         public string status { get; set; }
         public float LatestClose { get; set; }
         public DateTime LatestDateTime { get; set; }
+        public int ParentOrderID { get; set; }
     }
 }
