@@ -14,6 +14,8 @@ using System.Drawing;
 using System.Threading;
 using System.Net.Mail;
 using System.Xml;
+using System.Data.SqlClient;
+using System.Data;
 
 namespace TradePlatformHelper
 {
@@ -85,6 +87,16 @@ namespace TradePlatformHelper
         public static string BRACKET_SYSTEM = "BRACKET_SYSTEM";
         public static string STAGGERING_SYSTEM = "STAGGERING_SYSTEM";
 
+        public static string PROCEDURE_INSERT_EXECUTION_LOG = "Insert_Execution_Log";
+        public static string PROCEDURE_ARG_LOG_TYPE = "@arg_log_type";
+        public static string PROCEDURE_ARG_LOG_DETAILS = "@arg_log_detail";
+        public static string PROCEDURE_ARG_LAST_MOD_USER = "@arg_last_mod_user";
+        public static string PROCEDURE_ARG_LAST_MOD_DATE = "@arg_last_mod_date";
+
+        public static string LOG_TYPE_TRANSACTION = "TRAN";
+        public static string LOG_TYPE_INFO = "INFO";
+        public static string BROKER_ID = "IB";
+
         private delegate void SafeCallDelegate(ref RichTextBox tbLog, string msg, Color color);
         private delegate void SafeCallDelegateLable(ref Label tbLog, string msg);
         public enum marketReqID : int
@@ -114,9 +126,41 @@ namespace TradePlatformHelper
                     msg = DateTime.Now.ToString() + "-" + msg;
                     tbLog.SelectionColor = color;
                     tbLog.AppendText(msg + "\n");
+
+                    //logToDB(LOG_TYPE_INFO, msg, "Data Source=DESKTOP-VS6PI85;Initial Catalog=TradeSystem-DEV;Integrated Security=SSPI;");
                 }
-            }      
- 
+            }
+
+        public static void logToDB(string logType,string logDetails,string ConnString)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnString))
+                {
+                    conn.Open();
+
+                    // 1.  create a command object identifying the stored procedure
+                    SqlCommand cmd = new SqlCommand(PROCEDURE_INSERT_EXECUTION_LOG, conn);
+
+                    // 2. set the command object so it knows to execute a stored procedure
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    // 3. add parameter to command, which will be passed to the stored procedure
+                    cmd.Parameters.Add(new SqlParameter(PROCEDURE_ARG_LOG_TYPE, logType));
+                    cmd.Parameters.Add(new SqlParameter(PROCEDURE_ARG_LOG_DETAILS, logDetails));
+                    cmd.Parameters.Add(new SqlParameter(PROCEDURE_ARG_LAST_MOD_USER, "Application"));
+                    cmd.Parameters.Add(new SqlParameter(PROCEDURE_ARG_LAST_MOD_DATE, DateAndTime.Now));
+
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
 
         public static void setLable(ref Label lb, string msg)
         {

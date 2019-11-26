@@ -51,6 +51,9 @@ namespace TradePlatform
         private string StartTradingHour;
         private string EndTradingHour;
         private int DelaySecondUntillSignalValid;
+        private string ConnString;
+        private int signalTimeDisappearFor;
+        private int StopMonitorSignalDisappearAfter;
         private bool PositionOpen { get; set; }
 
         Dictionary<string, object> config;
@@ -69,6 +72,8 @@ namespace TradePlatform
             LoadConfig();
 
             OrderManager = new OrderManager(ibClient, ref tbLog, FromEmail , FromEmailPassword, ToEmail);
+            OrderManager.StopMonitorSignalDisappearAfter = StopMonitorSignalDisappearAfter;
+            OrderManager.signalTimeDisappearFor = signalTimeDisappearFor;
 
             ibClient.Error += ibClient_Error;
             ibClient.ConnectionClosed += ibClient_ConnectionClosed;
@@ -412,12 +417,17 @@ namespace TradePlatform
                     tbMode.ForeColor = Color.White;
                     tbMode.Enabled = false;
                 }
-                else
+                else if (Mode.Equals(ApplicationHelper.TEST))
                 {
                     tbMode.Text = Mode;
                     tbMode.BackColor = Color.Firebrick;
                     tbMode.ForeColor = Color.White;
                     tbMode.Enabled = false;
+                }
+                else
+                {
+                    ApplicationHelper.log(ref tbLog, "Unregcognize Mode", Color.DarkRed);
+                    this.Enabled = false;
                 }
                 signalPath = ApplicationHelper.getConfigValue("SignalPath");
                 SleepSeconds = int.Parse(ApplicationHelper.getConfigValue("SleepSeconds"));
@@ -434,10 +444,12 @@ namespace TradePlatform
                 StartTradingHour =  ApplicationHelper.getConfigValue("StartTradingHour");
                 EndTradingHour =  ApplicationHelper.getConfigValue("EndTradingHour");
 
+                signalTimeDisappearFor = int.Parse(ApplicationHelper.getConfigValue("signalTimeDisappearFor"));
+                StopMonitorSignalDisappearAfter = int.Parse(ApplicationHelper.getConfigValue("StopMonitorSignalDisappearAfter"));
 
                 IBContract = ApplicationHelper.ReadXML("Config/IBContract.xml");
 
- 
+                ConnString = ApplicationHelper.getConfigValue(Mode + "_DB");
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
                     if (! AllowedContractList.Contains(s))
@@ -910,7 +922,8 @@ namespace TradePlatform
             if (action.Equals(ApplicationHelper.BUY))
             {
                 brackerOrder = ApplicationHelper.BracketOrder(returnParentOrderID, ApplicationHelper.BUY, contractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
-            }
+
+           }
             if (action.Equals(ApplicationHelper.SELL))
             {
                 brackerOrder = ApplicationHelper.BracketOrder(returnParentOrderID, ApplicationHelper.SELL, contractQuantity, BracketSystem.EnterPostionPrice, ProfitTakerPrice, StopPrice);
@@ -922,8 +935,10 @@ namespace TradePlatform
             }
             CurrentOrderID = CurrentOrderID + 3;
 
+            ApplicationHelper.logToDB(ApplicationHelper.LOG_TYPE_TRANSACTION, string.Format("{0},{1}-{2}-{3}-{4},{5},{6},{7},{8},{9}", ApplicationHelper.BROKER_ID, contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency,action, contractQuantity, BracketSystem.EnterPostionPrice, BracketSystem.ProfitTakerAmount, BracketSystem.StopAmount), ConnString);
+
             return returnParentOrderID;
-            ApplicationHelper.log(ref tbLog, "Trade has been placed."  , Color.Black);
+ 
                                    
         }
 
@@ -980,6 +995,8 @@ namespace TradePlatform
 
             
             ApplicationHelper.log(ref tbLog, "Trade has been placed.", Color.Black);
+
+            ApplicationHelper.logToDB(ApplicationHelper.LOG_TYPE_TRANSACTION, string.Format("{0},{1}-{2}-{3}-{4},{5},{6},{7},{8},{9}", ApplicationHelper.BROKER_ID, contract.LocalSymbol, contract.Exchange, contract.SecType, contract.Currency, action, contractQuantity, EnterPositionPrice, ProfitTakerPrice, StopPrice), ConnString);
 
             return returnParentOrderID;
 

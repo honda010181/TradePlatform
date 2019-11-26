@@ -22,7 +22,8 @@ namespace TradePlatform.Managers
         private String FromEmail;
         private String ToEmail;
         private String FromEmailPassword;
-        private int signalTimeDisappear = 60;
+        public int signalTimeDisappearFor { get; set; } //in minute
+        public int StopMonitorSignalDisappearAfter { get; set; }//in minute
         public OrderManager (IBClient ibClient,ref RichTextBox tbLog, String FromEmail , String FromEmailPassword, String ToEmail)
         {
             this.ibClient = ibClient;
@@ -179,14 +180,14 @@ namespace TradePlatform.Managers
 
                 //Get latest signal heartbeat
                 var query = contractSignal.GroupBy(x => new { Action = x.Action, Symbol = x.Symbol, SignalDateTime = x.SignalDateTime })
-                        .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalDateTime = c.Key.SignalDateTime, TimeStamp = c.Max(x => x.TimeStamp) });
-
+                    .Select(c => new { Action = c.Key.Action, Symbol = c.Key.Symbol, SignalDateTime = c.Key.SignalDateTime, SignalStartDateTime = c.Min(x => x.TimeStamp), TimeStamp = c.Max(x => x.TimeStamp) });
+                                           
                 foreach (var c in query.ToList())
                 {
-                    if (DateAndTime.DateDiff(DateInterval.Second, c.TimeStamp, DateAndTime.Now) > signalTimeDisappear) //Signal has disappeared for longer than 20
+                    if (DateAndTime.DateDiff(DateInterval.Minute, c.TimeStamp, DateAndTime.Now) > signalTimeDisappearFor & DateAndTime.DateDiff(DateInterval.Minute,c.SignalStartDateTime, c.TimeStamp) < StopMonitorSignalDisappearAfter) //Signal has disappeared for longer than 20
                     {
 
-                        //ApplicationHelper.log(ref tbLog,String.Format("Signal has disappeared for longer than 120 seconds. Last signal at {0} Current Time {1}", c.TimeStamp, DateAndTime.Now), System.Drawing.Color.DarkRed);
+                        //ApplicationHelper.log(ref tbLog,String.Format("Signal has disappeared for longer than {2} minutes. Last signal at {0} Current Time {1}", c.TimeStamp, DateAndTime.Now, signalTimeDisappearFor), System.Drawing.Color.DarkRed);
 
                         foreach (AContract aContract in AContracts.Where(x => x.Symbol == c.Symbol & x.Action == c.Action & x.SignalDateTime == c.SignalDateTime))
                         {
