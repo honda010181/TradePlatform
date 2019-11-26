@@ -54,6 +54,7 @@ namespace TradePlatform
         private string ConnString;
         private int signalTimeDisappearFor;
         private int StopMonitorSignalDisappearAfter;
+        private string AlertSoundPath;
         private bool PositionOpen { get; set; }
 
         Dictionary<string, object> config;
@@ -172,15 +173,16 @@ namespace TradePlatform
         private void BtnBuy_Click(object sender, EventArgs e)
         {
 
-            IBApi.Contract contract = new Contract();
-            contract.Symbol = "ES";
-            contract.SecType = "FUT";
-            contract.Exchange = "GLOBEX";
-            contract.Currency = "USD";
-            contract.LocalSymbol = "ESU9";
+            //IBApi.Contract contract = new Contract();
+            //contract.Symbol = "ES";
+            //contract.SecType = "FUT";
+            //contract.Exchange = "GLOBEX";
+            //contract.Currency = "USD";
+            //contract.LocalSymbol = "ESU9";
 
-            //PlaceTrailingStopOrder(contract,2875);
-            int ParentOrderid = PlaceBracketOrder(contract, 2875,ApplicationHelper.SHORT,0);
+            ////PlaceTrailingStopOrder(contract,2875);
+            //int ParentOrderid = PlaceBracketOrder(contract, 2875,ApplicationHelper.SHORT,0);
+ 
         }
 
         private void BtnChangeSetting_Click(object sender, EventArgs e)
@@ -344,7 +346,7 @@ namespace TradePlatform
         }
         private void BtnEngine_Click(object sender, EventArgs e)
         {
-
+            ApplicationHelper.PlayAlert(AlertSoundPath);
             if (EngineStatus.Equals(ApplicationHelper.RUNNING) && btnEngine.Text.Equals("Start Engine"))
             {
                 MessageBox.Show("Only one engine allow.");
@@ -448,7 +450,7 @@ namespace TradePlatform
                 StopMonitorSignalDisappearAfter = int.Parse(ApplicationHelper.getConfigValue("StopMonitorSignalDisappearAfter"));
 
                 IBContract = ApplicationHelper.ReadXML("Config/IBContract.xml");
-
+                AlertSoundPath = ApplicationHelper.getConfigValue("AlertSoundPath");
                 ConnString = ApplicationHelper.getConfigValue(Mode + "_DB");
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
@@ -744,7 +746,7 @@ namespace TradePlatform
                                     //}
                                     if (Mode.Equals(ApplicationHelper.PROD) & TradeCount <= MaxTradesPerDay)
                                     {
-
+                                        ApplicationHelper.PlayAlert(AlertSoundPath);
                                         TradeCount++;
                                         int ParentOrderID = 0;
 
@@ -1239,8 +1241,12 @@ namespace TradePlatform
         }
 
 
+
         #endregion
 
- 
+        private void StopMusicAlertToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ApplicationHelper.StopAlert();
+        }
     }
 }

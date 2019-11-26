@@ -99,6 +99,9 @@ namespace TradePlatformHelper
 
         private delegate void SafeCallDelegate(ref RichTextBox tbLog, string msg, Color color);
         private delegate void SafeCallDelegateLable(ref Label tbLog, string msg);
+
+
+        private static WMPLib.WindowsMediaPlayer Player = new WMPLib.WindowsMediaPlayer();
         public enum marketReqID : int
         {
             ES = 1000, MES = 1001, M2K = 1002, MNQ = 1003, NQ = 1004, RTY = 1005
@@ -604,5 +607,17 @@ namespace TradePlatformHelper
 
         }
         #endregion
+
+
+        public static void PlayAlert(string mp3Location)
+        {
+            Player.URL = mp3Location;
+            Player.controls.play();
+        }
+
+        public static void StopAlert()
+        {
+            Player.controls.stop();
+        }
     }
 }
