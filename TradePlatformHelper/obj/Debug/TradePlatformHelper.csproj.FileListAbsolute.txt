@@ -22,8 +22,8 @@ C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\bin\Debug\TradePlat
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\bin\Debug\CSharpAPI.dll
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\bin\Debug\System.Drawing.dll
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\bin\Debug\CSharpAPI.pdb
-C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.csprojAssemblyReference.cache
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.csproj.CopyComplete
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.dll
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.pdb
 C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\bin\Debug\AxInterop.WMPLib.dll
+C:\Users\vuha\source\repos\TradePlatform\TradePlatformHelper\obj\Debug\TradePlatformHelper.csprojAssemblyReference.cache

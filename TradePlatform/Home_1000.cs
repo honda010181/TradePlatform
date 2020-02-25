@@ -19,6 +19,9 @@ using TradePlatform.TradeSystems;
 using TradePlatform.Managers;
 namespace TradePlatform
 {
+    /// <summary>
+    /// Should encapsulate all these variable into a object so that they can be passed around
+    /// </summary>
     public partial class Home_1000 : Form
     {
  
@@ -385,6 +388,10 @@ namespace TradePlatform
                 ApplicationHelper.log(ref tbLog, "Engine Starts: " + DateTime.Now.ToString(), Color.Black);
 
 
+                if (Directory.GetFiles(signalPath, "signal*.txt").Length == 0)
+                {
+                    MessageBox.Show("There is no signal files. Check file name.");
+                }
                 foreach (string filePath in Directory.GetFiles(signalPath,"signal*.txt"))
                 {
                     ApplicationHelper.log(ref tbLog,"Signal File: " + filePath, Color.Black);
@@ -622,7 +629,7 @@ namespace TradePlatform
         {
             FileInfo fileInfo = new FileInfo(signalPath);
             String fileName;
-            int TradeCount = 0;
+            int TradeCount = 1;
             //This keeps track of valid contracts
             List<AContract> AContracts = new List<AContract>();
 
@@ -712,7 +719,7 @@ namespace TradePlatform
                                     continue;
                                 }
 
-                                if (DateAndTime.Now.TimeOfDay < DateAndTime.TimeValue(StartTradingHour).TimeOfDay & DateAndTime.Now.TimeOfDay > DateAndTime.TimeValue(EndTradingHour).TimeOfDay)
+                                if (DateAndTime.Now.TimeOfDay < DateAndTime.TimeValue(StartTradingHour).TimeOfDay || DateAndTime.Now.TimeOfDay > DateAndTime.TimeValue(EndTradingHour).TimeOfDay)
                                 {
                                     ApplicationHelper.log(ref tbLog, string.Format("{0} is out side of trading hour {1} and {2}", DateAndTime.Now.TimeOfDay, StartTradingHour, EndTradingHour), Color.OrangeRed);
                                     continue;
@@ -739,6 +746,10 @@ namespace TradePlatform
                                     //Write to the text file log.
                                     ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
+
+                                    ApplicationHelper.PlayAlert(AlertSoundPath);
+
+
                                     //if (PositionOpen)
                                     //{
                                     //    ApplicationHelper.log(ref tbLog, string.Format("Postiion is currently open. This signal will be skipped."));
@@ -746,7 +757,7 @@ namespace TradePlatform
                                     //}
                                     if (Mode.Equals(ApplicationHelper.PROD) & TradeCount <= MaxTradesPerDay)
                                     {
-                                        ApplicationHelper.PlayAlert(AlertSoundPath);
+
                                         TradeCount++;
                                         int ParentOrderID = 0;
 
@@ -1247,6 +1258,28 @@ namespace TradePlatform
         private void StopMusicAlertToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ApplicationHelper.StopAlert();
+        }
+
+        private void SettingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Setting setting = new Setting(MaxTradesPerDay,StartTradingHour,EndTradingHour);
+            
+            setting.ShowDialog();
+
+
+
+            MaxTradesPerDay = setting.MaxTradePerDay;
+            StartTradingHour = setting.StartTradingHour;
+            EndTradingHour = setting.EndTradinghour;
+
+
+            lbStartTradingHour.Text = StartTradingHour.ToString();
+            lbEndTradingHour.Text = EndTradingHour.ToString();
+            ApplicationHelper.log(ref tbLog, string.Format("Max Trade Per Day {0}", MaxTradesPerDay), Color.Black);
+            ApplicationHelper.log(ref tbLog, string.Format("Start Trading Hour {0}", StartTradingHour), Color.Black);
+            ApplicationHelper.log(ref tbLog, string.Format("End Trading Hour {0}", EndTradingHour), Color.Black);
+
+
         }
     }
 }

@@ -53,14 +53,17 @@
             this.tbPort = new System.Windows.Forms.TextBox();
             this.tbHost = new System.Windows.Forms.TextBox();
             this.btnConnect = new System.Windows.Forms.Button();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.mainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.settingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stopMusicAlertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lbAllowedContract = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.lbESPrice = new System.Windows.Forms.Label();
             this.lbLastRun = new System.Windows.Forms.Label();
             this.tbLog = new System.Windows.Forms.RichTextBox();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.alertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stopMusicAlertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.gbTradeSystems.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -329,6 +332,53 @@
             this.btnConnect.UseVisualStyleBackColor = true;
             this.btnConnect.Click += new System.EventHandler(this.BtnConnect_Click);
             // 
+            // menuStrip1
+            // 
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mainToolStripMenuItem,
+            this.alertToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1219, 24);
+            this.menuStrip1.TabIndex = 25;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // mainToolStripMenuItem
+            // 
+            this.mainToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripSeparator1,
+            this.settingToolStripMenuItem});
+            this.mainToolStripMenuItem.Name = "mainToolStripMenuItem";
+            this.mainToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            this.mainToolStripMenuItem.Text = "Main";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            // 
+            // settingToolStripMenuItem
+            // 
+            this.settingToolStripMenuItem.Name = "settingToolStripMenuItem";
+            this.settingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingToolStripMenuItem.Text = "Setting";
+            this.settingToolStripMenuItem.Click += new System.EventHandler(this.SettingToolStripMenuItem_Click);
+            // 
+            // alertToolStripMenuItem
+            // 
+            this.alertToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.stopMusicAlertToolStripMenuItem});
+            this.alertToolStripMenuItem.Name = "alertToolStripMenuItem";
+            this.alertToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.alertToolStripMenuItem.Text = "Alert";
+            // 
+            // stopMusicAlertToolStripMenuItem
+            // 
+            this.stopMusicAlertToolStripMenuItem.Name = "stopMusicAlertToolStripMenuItem";
+            this.stopMusicAlertToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.stopMusicAlertToolStripMenuItem.Text = "Stop Music Alert";
+            this.stopMusicAlertToolStripMenuItem.Click += new System.EventHandler(this.StopMusicAlertToolStripMenuItem_Click);
+            // 
             // lbAllowedContract
             // 
             this.lbAllowedContract.FormattingEnabled = true;
@@ -373,31 +423,6 @@
             this.tbLog.Size = new System.Drawing.Size(950, 355);
             this.tbLog.TabIndex = 16;
             this.tbLog.Text = "";
-            // 
-            // menuStrip1
-            // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.alertToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1219, 24);
-            this.menuStrip1.TabIndex = 25;
-            this.menuStrip1.Text = "menuStrip1";
-            // 
-            // alertToolStripMenuItem
-            // 
-            this.alertToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.stopMusicAlertToolStripMenuItem});
-            this.alertToolStripMenuItem.Name = "alertToolStripMenuItem";
-            this.alertToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.alertToolStripMenuItem.Text = "Alert";
-            // 
-            // stopMusicAlertToolStripMenuItem
-            // 
-            this.stopMusicAlertToolStripMenuItem.Name = "stopMusicAlertToolStripMenuItem";
-            this.stopMusicAlertToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.stopMusicAlertToolStripMenuItem.Text = "Stop Music Alert";
-            this.stopMusicAlertToolStripMenuItem.Click += new System.EventHandler(this.StopMusicAlertToolStripMenuItem_Click);
             // 
             // Home_1000
             // 
@@ -460,6 +485,9 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem alertToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stopMusicAlertToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mainToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem settingToolStripMenuItem;
     }
 }
 

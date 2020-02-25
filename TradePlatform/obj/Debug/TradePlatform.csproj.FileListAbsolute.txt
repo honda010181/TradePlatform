@@ -51,3 +51,4 @@ C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.p
 C:\Users\vuha\Source\Repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.BracketSetting.resources
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.StaggerSetting.resources
 C:\Users\vuha\source\repos\TradePlatform\TradePlatform\bin\Debug\AxInterop.WMPLib.dll
+C:\Users\vuha\source\repos\TradePlatform\TradePlatform\obj\Debug\TradePlatform.Setting.resources
