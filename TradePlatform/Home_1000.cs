@@ -24,16 +24,16 @@ namespace TradePlatform
     /// </summary>
     public partial class Home_1000 : Form
     {
- 
+
 
         private EReaderMonitorSignal signal = new EReaderMonitorSignal();
         private IBClient ibClient;
         private bool IsConnected { get; set; }
         //private List<AContract> AContracts = new List<AContract>();
 
- 
+
         private Dictionary<string, object> IBContract = new Dictionary<string, object>();
-        
+
         private BracketSystem BracketSystem;
         private StaggeringSystem StaggeringSystem;
         private string Notification = ApplicationHelper.Y;
@@ -59,9 +59,11 @@ namespace TradePlatform
         private int StopMonitorSignalDisappearAfter;
         private string AlertSoundPath;
         private bool PositionOpen { get; set; }
-
+        private bool AmibrokerMonitor = false;
         Dictionary<string, object> config;
         float TrailingStopAmount;
+        private string AmiBrokerExePath;
+
         //int ContractQuantity;
         OrderManager OrderManager  ;
 
@@ -443,7 +445,7 @@ namespace TradePlatform
                 ContractLog = ApplicationHelper.getConfigValue("ContractLog");
                 ApplicationLogFolder = ApplicationHelper.getConfigValue("ApplicationLogFolder");
                 DelayTolerance = int.Parse(ApplicationHelper.getConfigValue("DelayTolerance"));
-                //Notification = ApplicationHelper.getConfigValue("Notification");
+                Notification = ApplicationHelper.getConfigValue("Notification");
                 FromEmail = ApplicationHelper.getConfigValue("FromEmail");
                 FromEmailPassword = ApplicationHelper.getConfigValue("FromEmailPassword");
                 ToEmail = ApplicationHelper.getConfigValue("ToEmail");
@@ -459,6 +461,8 @@ namespace TradePlatform
                 IBContract = ApplicationHelper.ReadXML("Config/IBContract.xml");
                 AlertSoundPath = ApplicationHelper.getConfigValue("AlertSoundPath");
                 ConnString = ApplicationHelper.getConfigValue(Mode + "_DB");
+                AmiBrokerExePath = ApplicationHelper.getConfigValue("AmiBrokerExePath");
+
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
                     if (! AllowedContractList.Contains(s))
@@ -469,6 +473,10 @@ namespace TradePlatform
 
                 LoadSystemConfig();
                 AfterLoadConfig();
+
+
+
+                InitializeContractGrid();
             }
             catch (Exception ex)
             {
@@ -546,6 +554,15 @@ namespace TradePlatform
 
             lbStartTradingHour.Text = StartTradingHour;
             lbEndTradingHour.Text = EndTradingHour;
+
+            if (Notification.Equals(ApplicationHelper.Y))
+            {
+                cbNotification.Checked = true;
+            }
+            else
+            {
+                cbNotification.Checked = false;
+            }
             //dtStartTradingHour.Text =DateAndTime.Today.ToString("yyyy/MM/dd ") + DateAndTime.TimeValue(StartTradingHour).ToString()  ;
             //dtEndTradingHour.Text = DateAndTime.Today.ToString() + DateAndTime.TimeValue(EndTradingHour).ToString()   ;
         }
@@ -585,11 +602,18 @@ namespace TradePlatform
                 {
                     ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.ES), contract, "233", false, false, null);
                 }
-                if (contract.Symbol.Trim().Equals(ApplicationHelper.MES))
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.RTY))
                 {
-                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.MES), contract, "233", false, false, null);
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.RTY), contract, "233", false, false, null);
                 }
-
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.NQ))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.NQ), contract, "233", false, false, null);
+                }
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.GC))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.GC), contract, "233", false, false, null);
+                }
             }
 
         }
@@ -669,6 +693,28 @@ namespace TradePlatform
 
                     ApplicationHelper.setLable(ref lbLastRun, "Last Run: " + DateTime.Now.ToString());
 
+
+                    if (AmibrokerMonitor)
+                    {
+                        if (!ApplicationHelper.IsProcessRunning("Broker"))
+                        {
+                            //ApplicationHelper.PlayAlert(AlertSoundPath);
+
+                            if (File.Exists(AmiBrokerExePath))
+                            {
+                                ApplicationHelper.log(ref tbLog, string.Format("{0} - Amibroker is not running. Restart Application.", DateAndTime.Now), Color.Black);
+                                System.Diagnostics.Process.Start(AmiBrokerExePath);
+                            }
+                            else
+                            {
+                                ApplicationHelper.log(ref tbLog, string.Format("{0} - Amibroker is not running. However cannot locate exe.", DateAndTime.Now), Color.Black);
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                    }
                     try
                     {
                         tempAContractList = ApplicationHelper.GetAmiSignalContracts(signalPath);
@@ -1050,11 +1096,25 @@ namespace TradePlatform
                 double lastPrice = ApplicationHelper.ParseLastPrice(text);
 
                 int ES =(int)ApplicationHelper.marketReqID.ES;
-
-                if (text.ToString().Contains(ES.ToString()))
+ 
+ 
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.ES ))
                 {
-                    ApplicationHelper.setLable(ref lbESPrice, lastPrice.ToString());
+                    UpdateContractGrid(ApplicationHelper.ES, lastPrice);
                 }
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.RTY))
+                {
+                    UpdateContractGrid(ApplicationHelper.RTY, lastPrice);
+                }
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.NQ))
+                {
+                    UpdateContractGrid(ApplicationHelper.NQ, lastPrice);
+                }
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.GC))
+                {
+                    UpdateContractGrid(ApplicationHelper.GC, lastPrice);
+                }
+
 
             }
 
@@ -1064,10 +1124,10 @@ namespace TradePlatform
 
         private double getLatestPrice(Contract contract)
         {
-            double LatestPrice=0;
+            double LatestPrice=-99999;
 
-
-            double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
+            //Have to rewrite this to get price from grid.
+            //double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
 
 
             return LatestPrice;
@@ -1076,10 +1136,11 @@ namespace TradePlatform
         //OverLoad
         private double getLatestPrice()
         {
-            double LatestPrice = 0;
+            double LatestPrice = -99999;
 
 
-            double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
+            //Have to rewrite this to get price from grid.
+            //double.TryParse(lbESPrice.Text.ToString(), out LatestPrice);
 
 
             return LatestPrice;
@@ -1262,12 +1323,13 @@ namespace TradePlatform
 
         private void SettingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Setting setting = new Setting(MaxTradesPerDay,StartTradingHour,EndTradingHour);
-            
+            Setting setting = new Setting(MaxTradesPerDay,StartTradingHour,EndTradingHour, AmibrokerMonitor);
+
+
             setting.ShowDialog();
 
 
-
+            AmibrokerMonitor= setting.MonitorAmiBroker;
             MaxTradesPerDay = setting.MaxTradePerDay;
             StartTradingHour = setting.StartTradingHour;
             EndTradingHour = setting.EndTradinghour;
@@ -1281,5 +1343,101 @@ namespace TradePlatform
 
 
         }
+
+
+
+
+
+
+        #region contract grid
+        private void InitializeContractGrid()
+        {
+            DataTable dt = new DataTable();
+
+            DataColumn colContract = new DataColumn();
+            colContract.DataType = typeof(string);
+            colContract.ColumnName = ApplicationHelper.Contract;
+            colContract.Caption = ApplicationHelper.Contract;
+            colContract.ReadOnly = true;
+            colContract.Unique = true;
+
+            DataColumn colPrice = new DataColumn();
+            colPrice.DataType = typeof(double);
+            colPrice.ColumnName = ApplicationHelper.Price;
+            colPrice.Caption = ApplicationHelper.Price;
+            colPrice.ReadOnly = false;
+            
+
+            DataColumn colAlertBottom = new DataColumn();
+            colAlertBottom.DataType = typeof(double);
+            colAlertBottom.ColumnName = ApplicationHelper.AlertBottomPrice;
+            colAlertBottom.Caption = ApplicationHelper.AlertBottomPrice;
+            colAlertBottom.ReadOnly = false;
+
+            DataColumn colAlertTop = new DataColumn();
+            colAlertTop.DataType = typeof(double);
+            colAlertTop.ColumnName = ApplicationHelper.AlertTopPrice;
+            colAlertTop.Caption = ApplicationHelper.AlertTopPrice;
+            colAlertTop.ReadOnly = false;
+
+
+            dt.Columns.Add(colContract);
+            dt.Columns.Add(colPrice);
+            dt.Columns.Add(colAlertBottom);
+            dt.Columns.Add(colAlertTop);
+
+            foreach (string contract in IBContract.Keys)
+            {
+                DataRow dr = dt.NewRow();
+                dr[ApplicationHelper.Contract] = contract;
+                dr[ApplicationHelper.Price] = 0.00;
+                dt.Rows.Add(dr);
+            }
+
+
+            dgContract.DataSource = dt;
+            dgContract.AllowUserToAddRows = false;
+            dt.Dispose();
+
+        }
+
+        private void UpdateContractGrid(string contract, double price)
+        {
+            double bottomPrice;
+            double topPrice;
+            foreach (DataGridViewRow item in dgContract.Rows)
+            { 
+                if (item.Cells[ApplicationHelper.Contract].Value.ToString().Equals(contract))
+                {
+                    item.Cells[ApplicationHelper.Price].Value = price;
+
+                    double.TryParse(item.Cells[ApplicationHelper.AlertBottomPrice].Value.ToString(),out bottomPrice);
+                    double.TryParse(item.Cells[ApplicationHelper.AlertTopPrice].Value.ToString(),out topPrice);
+
+                    if (topPrice != 0 && price >= topPrice)
+                    {
+                        ApplicationHelper.PlayAlert(AlertSoundPath);
+                        item.Cells[ApplicationHelper.AlertTopPrice].Style.BackColor = Color.Red;
+                    }
+                    else
+                    {
+                        item.Cells[ApplicationHelper.AlertTopPrice].Style.BackColor = Color.Green;
+                    }
+
+                    if (bottomPrice != 0 && price <= bottomPrice)
+                    {
+                        ApplicationHelper.PlayAlert(AlertSoundPath);
+                        item.Cells[ApplicationHelper.AlertBottomPrice].Style.BackColor = Color.Red;
+                    }
+                    else
+                    {
+                        item.Cells[ApplicationHelper.AlertBottomPrice].Style.BackColor = Color.Green;
+                    }
+                }
+            }
+            dgContract.Refresh();
+        }
+
+        #endregion
     }
 }

@@ -61,12 +61,13 @@
             this.stopMusicAlertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lbAllowedContract = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.lbESPrice = new System.Windows.Forms.Label();
             this.lbLastRun = new System.Windows.Forms.Label();
             this.tbLog = new System.Windows.Forms.RichTextBox();
+            this.dgContract = new System.Windows.Forms.DataGridView();
             this.panel1.SuspendLayout();
             this.gbTradeSystems.SuspendLayout();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgContract)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -96,7 +97,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1219, 220);
+            this.panel1.Size = new System.Drawing.Size(1326, 220);
             this.panel1.TabIndex = 0;
             // 
             // gbTradeSystems
@@ -210,8 +211,6 @@
             // cbNotification
             // 
             this.cbNotification.AutoSize = true;
-            this.cbNotification.Checked = true;
-            this.cbNotification.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbNotification.Location = new System.Drawing.Point(12, 51);
             this.cbNotification.Name = "cbNotification";
             this.cbNotification.Size = new System.Drawing.Size(79, 17);
@@ -235,7 +234,7 @@
             this.tbMode.Dock = System.Windows.Forms.DockStyle.Top;
             this.tbMode.Location = new System.Drawing.Point(0, 24);
             this.tbMode.Name = "tbMode";
-            this.tbMode.Size = new System.Drawing.Size(1219, 20);
+            this.tbMode.Size = new System.Drawing.Size(1326, 20);
             this.tbMode.TabIndex = 10;
             this.tbMode.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -339,7 +338,7 @@
             this.alertToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1219, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1326, 24);
             this.menuStrip1.TabIndex = 25;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -382,30 +381,21 @@
             // lbAllowedContract
             // 
             this.lbAllowedContract.FormattingEnabled = true;
-            this.lbAllowedContract.Location = new System.Drawing.Point(969, 226);
+            this.lbAllowedContract.Location = new System.Drawing.Point(885, 252);
             this.lbAllowedContract.Name = "lbAllowedContract";
             this.lbAllowedContract.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lbAllowedContract.Size = new System.Drawing.Size(69, 355);
+            this.lbAllowedContract.Size = new System.Drawing.Size(85, 95);
             this.lbAllowedContract.TabIndex = 2;
             this.lbAllowedContract.SelectedIndexChanged += new System.EventHandler(this.LbAllowedContract_SelectedIndexChanged);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(1045, 226);
+            this.label1.Location = new System.Drawing.Point(882, 229);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(21, 13);
+            this.label1.Size = new System.Drawing.Size(127, 13);
             this.label1.TabIndex = 3;
-            this.label1.Text = "ES";
-            // 
-            // lbESPrice
-            // 
-            this.lbESPrice.AutoSize = true;
-            this.lbESPrice.Location = new System.Drawing.Point(1102, 226);
-            this.lbESPrice.Name = "lbESPrice";
-            this.lbESPrice.Size = new System.Drawing.Size(53, 13);
-            this.lbESPrice.TabIndex = 9;
-            this.lbESPrice.Text = "lbESPrice";
+            this.label1.Text = "Select Contract To Trade";
             // 
             // lbLastRun
             // 
@@ -420,18 +410,26 @@
             // 
             this.tbLog.Location = new System.Drawing.Point(13, 226);
             this.tbLog.Name = "tbLog";
-            this.tbLog.Size = new System.Drawing.Size(950, 355);
+            this.tbLog.Size = new System.Drawing.Size(856, 355);
             this.tbLog.TabIndex = 16;
             this.tbLog.Text = "";
+            // 
+            // dgContract
+            // 
+            this.dgContract.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgContract.Location = new System.Drawing.Point(875, 351);
+            this.dgContract.Name = "dgContract";
+            this.dgContract.Size = new System.Drawing.Size(439, 150);
+            this.dgContract.TabIndex = 19;
             // 
             // Home_1000
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1219, 656);
+            this.ClientSize = new System.Drawing.Size(1326, 656);
+            this.Controls.Add(this.dgContract);
             this.Controls.Add(this.tbLog);
             this.Controls.Add(this.lbLastRun);
-            this.Controls.Add(this.lbESPrice);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lbAllowedContract);
             this.Controls.Add(this.panel1);
@@ -445,6 +443,7 @@
             this.gbTradeSystems.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgContract)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -467,7 +466,6 @@
         private System.Windows.Forms.ListBox lbAllowedContract;
         private System.Windows.Forms.Button btnMartketData;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label lbESPrice;
         private System.Windows.Forms.Label lbLastRun;
         private System.Windows.Forms.RichTextBox tbLog;
         private System.Windows.Forms.CheckBox cbNotification;
@@ -488,6 +486,7 @@
         private System.Windows.Forms.ToolStripMenuItem mainToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem settingToolStripMenuItem;
+        private System.Windows.Forms.DataGridView dgContract;
     }
 }
 

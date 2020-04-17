@@ -1,4 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <IBContract>
-  <ES>ESH0-GLOBEX-FUT-USD</ES>
+  <ES>ESM0-GLOBEX-FUT-USD</ES>
+  <RTY>RTYM0-GLOBEX-FUT-USD</RTY>
+  <NQ>NQM0-GLOBEX-FUT-USD</NQ>
+  <GC>GCM0-NYMEX-FUT-USD</GC>
 </IBContract>

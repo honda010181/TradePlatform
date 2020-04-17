@@ -16,7 +16,7 @@ using System.Net.Mail;
 using System.Xml;
 using System.Data.SqlClient;
 using System.Data;
-
+using System.Diagnostics;
 namespace TradePlatformHelper
 {
     public static class ApplicationHelper
@@ -37,6 +37,9 @@ namespace TradePlatformHelper
         public static string TRAIL = "TRAIL";
         public static string ES = "ES";
         public static string MES = "MES";
+        public static string RTY = "RTY";
+        public static string NQ = "NQ";
+        public static string GC = "GC";
         public static string IBContractPath = "IBContract.xml";
         public static string YES = "YES";
         public static string Y = "Y";
@@ -57,6 +60,11 @@ namespace TradePlatformHelper
         public static string TrailingStopAmount = "TrailingStopAmount";
         public static string StopAmount = "StopAmount";
         public static string ProfitTakerAmount = "ProfitTakerAmount";
+        public static string Contract = "Contract";
+        public static string Price = "Price";
+        public static string AlertBottomPrice = "Alert Bottom Price";
+        public static string AlertTopPrice = "Alert Top Price";
+ 
 
         public static string Step1 = "Step1";
         public static string Step1ContractQuantity = "Step1ContractQuantity";
@@ -104,7 +112,7 @@ namespace TradePlatformHelper
         private static WMPLib.WindowsMediaPlayer Player = new WMPLib.WindowsMediaPlayer();
         public enum marketReqID : int
         {
-            ES = 1000, MES = 1001, M2K = 1002, MNQ = 1003, NQ = 1004, RTY = 1005
+            ES = 1000, MES = 1001, M2K = 1002, MNQ = 1003, NQ = 1004, RTY = 1005, GC = 1006
         }
 
         public enum IBContract : int 
@@ -618,6 +626,29 @@ namespace TradePlatformHelper
         public static void StopAlert()
         {
             Player.controls.stop();
+        }
+
+        public static Boolean IsProcessRunning(string processName)
+        {
+            Boolean result = false;
+            try
+            {
+ 
+                if (Process.GetProcessesByName(processName).Count() > 0)
+                {
+                    result = true;
+                }
+                else
+                {
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+            }
+
+            return result;
         }
     }
 }

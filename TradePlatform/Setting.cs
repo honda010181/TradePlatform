@@ -17,17 +17,20 @@ namespace TradePlatform
         public int MaxTradePerDay { get; set; }
         public string StartTradingHour { get; set; }
         public string EndTradinghour { get; set; }
+
+        public Boolean MonitorAmiBroker { get; set; }
         public Setting()
         {
             InitializeComponent();
         }
 
-        public Setting(int maxTradePerDay, string StartTradingHour, string EndTradingHour)
+        public Setting(int maxTradePerDay, string StartTradingHour, string EndTradingHour, Boolean MonitorAmiBroker)
         {
             InitializeComponent();
             tbMaxTradePerDay.Text = maxTradePerDay.ToString();
             dtStartTradingHour.Text = DateAndTime.TimeValue(StartTradingHour).TimeOfDay.ToString();
             dtEndTradingHour.Text = DateAndTime.TimeValue(EndTradingHour).TimeOfDay.ToString();
+            cbAmibrokerMonitor.Checked = MonitorAmiBroker;
         }
         private void Label1_Click(object sender, EventArgs e)
         {
@@ -77,6 +80,11 @@ namespace TradePlatform
                 MessageBox.Show("Invalid Time Value");
             }
 
+        }
+
+        private void CbAmibrokerMonitor_CheckedChanged(object sender, EventArgs e)
+        {
+            this.MonitorAmiBroker = cbAmibrokerMonitor.Checked;
         }
     }
 }

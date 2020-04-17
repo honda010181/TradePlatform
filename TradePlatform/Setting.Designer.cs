@@ -34,6 +34,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.dtStartTradingHour = new System.Windows.Forms.DateTimePicker();
             this.dtEndTradingHour = new System.Windows.Forms.DateTimePicker();
+            this.cbAmibrokerMonitor = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // lbMaxTradePerDay
@@ -92,11 +93,24 @@
             this.dtEndTradingHour.Value = new System.DateTime(2020, 2, 23, 17, 56, 38, 0);
             this.dtEndTradingHour.ValueChanged += new System.EventHandler(this.DtEndTradingHour_ValueChanged);
             // 
+            // cbAmibrokerMonitor
+            // 
+            this.cbAmibrokerMonitor.AutoSize = true;
+            this.cbAmibrokerMonitor.Location = new System.Drawing.Point(163, 188);
+            this.cbAmibrokerMonitor.Name = "cbAmibrokerMonitor";
+            this.cbAmibrokerMonitor.Size = new System.Drawing.Size(115, 17);
+            this.cbAmibrokerMonitor.TabIndex = 8;
+            this.cbAmibrokerMonitor.Text = "Monitor Ami Borker";
+            this.cbAmibrokerMonitor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.cbAmibrokerMonitor.UseVisualStyleBackColor = true;
+            this.cbAmibrokerMonitor.CheckedChanged += new System.EventHandler(this.CbAmibrokerMonitor_CheckedChanged);
+            // 
             // Setting
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(407, 467);
+            this.Controls.Add(this.cbAmibrokerMonitor);
             this.Controls.Add(this.dtEndTradingHour);
             this.Controls.Add(this.dtStartTradingHour);
             this.Controls.Add(this.label2);
@@ -118,5 +132,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.DateTimePicker dtStartTradingHour;
         private System.Windows.Forms.DateTimePicker dtEndTradingHour;
+        private System.Windows.Forms.CheckBox cbAmibrokerMonitor;
     }
 }
