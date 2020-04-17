@@ -59,7 +59,7 @@ namespace TradePlatform
         private int StopMonitorSignalDisappearAfter;
         private string AlertSoundPath;
         private bool PositionOpen { get; set; }
-        private bool AmibrokerMonitor = false;
+        private bool AmibrokerMonitor = true;
         Dictionary<string, object> config;
         float TrailingStopAmount;
         private string AmiBrokerExePath;
@@ -462,7 +462,8 @@ namespace TradePlatform
                 AlertSoundPath = ApplicationHelper.getConfigValue("AlertSoundPath");
                 ConnString = ApplicationHelper.getConfigValue(Mode + "_DB");
                 AmiBrokerExePath = ApplicationHelper.getConfigValue("AmiBrokerExePath");
-
+                AmibrokerMonitor = ApplicationHelper.getConfigValue("AmibrokerMonitor").Equals(ApplicationHelper.Y)? true: false;
+ 
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
                     if (! AllowedContractList.Contains(s))
