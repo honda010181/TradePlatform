@@ -19,24 +19,40 @@ namespace TradePlatform
         public string EndTradinghour { get; set; }
 
         public Boolean MonitorAmiBroker { get; set; }
+
+        public string TradeDirection { get; set; }
         public Setting()
         {
             InitializeComponent();
         }
 
-        public Setting(int maxTradePerDay, string StartTradingHour, string EndTradingHour, Boolean MonitorAmiBroker)
+        public Setting(int maxTradePerDay, string StartTradingHour, string EndTradingHour, Boolean MonitorAmiBroker, string TradeDirection)
         {
             InitializeComponent();
+            InitializeControls();
             tbMaxTradePerDay.Text = maxTradePerDay.ToString();
             dtStartTradingHour.Text = DateAndTime.TimeValue(StartTradingHour).TimeOfDay.ToString();
             dtEndTradingHour.Text = DateAndTime.TimeValue(EndTradingHour).TimeOfDay.ToString();
             cbAmibrokerMonitor.Checked = MonitorAmiBroker;
+            cbTradeDirection.Text = TradeDirection;
         }
         private void Label1_Click(object sender, EventArgs e)
         {
 
         }
 
+        private void InitializeControls()
+        {
+            List<string> tradeDirection = new List<string>();
+            tradeDirection.Add("BOTH");
+            tradeDirection.Add("BUY");
+            tradeDirection.Add("SELL");
+
+            //cboTradeDirection.DataSource = tradeDirection;
+
+            cbTradeDirection.DataSource = tradeDirection;
+            tradeDirection.Clear();
+        }
         private void TbMaxTradePerDay_TextChanged(object sender, EventArgs e)
         {
             int value = ApplicationHelper.GetIntegerFromTextBox(ref tbMaxTradePerDay);
@@ -85,6 +101,11 @@ namespace TradePlatform
         private void CbAmibrokerMonitor_CheckedChanged(object sender, EventArgs e)
         {
             this.MonitorAmiBroker = cbAmibrokerMonitor.Checked;
+        }
+
+        private void cbTradeDirection_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            this.TradeDirection = cbTradeDirection.Text;
         }
     }
 }

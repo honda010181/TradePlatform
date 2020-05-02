@@ -63,7 +63,7 @@ namespace TradePlatform
         Dictionary<string, object> config;
         float TrailingStopAmount;
         private string AmiBrokerExePath;
-
+        private string TradeDirection;
         //int ContractQuantity;
         OrderManager OrderManager  ;
 
@@ -463,7 +463,7 @@ namespace TradePlatform
                 ConnString = ApplicationHelper.getConfigValue(Mode + "_DB");
                 AmiBrokerExePath = ApplicationHelper.getConfigValue("AmiBrokerExePath");
                 AmibrokerMonitor = ApplicationHelper.getConfigValue("AmibrokerMonitor").Equals(ApplicationHelper.Y)? true: false;
- 
+                TradeDirection = ApplicationHelper.getConfigValue("TradeDirection");
                 foreach (string s in ApplicationHelper.getConfigValue("AllowedContractList").Split(','))
                 {
                     if (! AllowedContractList.Contains(s))
@@ -576,6 +576,7 @@ namespace TradePlatform
                 IBApi.Contract contract = new Contract();
                 contract.Symbol = c.Key.ToString();
 
+                                
                 int index = 0;
                 foreach (string s in c.Value.ToString().Split('-'))
                 {
@@ -614,6 +615,18 @@ namespace TradePlatform
                 if (contract.Symbol.Trim().Equals(ApplicationHelper.GC))
                 {
                     ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.GC), contract, "233", false, false, null);
+                }
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.GBP))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.GBP), contract, "233", false, false, null);
+                }
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.JPY))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.JPY), contract, "233", false, false, null);
+                }
+                if (contract.Symbol.Trim().Equals(ApplicationHelper.EUR))
+                {
+                    ibClient.ClientSocket.reqMktData((int)(ApplicationHelper.marketReqID.EUR), contract, "233", false, false, null);
                 }
             }
 
@@ -794,9 +807,16 @@ namespace TradePlatform
                                     ApplicationHelper.log(ContractLog, string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}", c.Action, c.Symbol, c.SignalClose, c.SignalDateTime, c.TimeStamp, c.LatestClose, c.LatestDateTime));
 
 
-                                    ApplicationHelper.PlayAlert(AlertSoundPath);
+                                    if (TradeDirection.Equals(ApplicationHelper.BOTH) || TradeDirection.Equals(c.Action.Trim().ToUpper()))
+                                    {
+                                        ApplicationHelper.PlayAlert(AlertSoundPath);
+                                    }
+                                    else
+                                    {
+                                        ApplicationHelper.log(ContractLog, string.Format("Not the right direction. Expected {0} - Actual {1}" ,TradeDirection, c.Action));
 
-
+                                        continue;
+                                    }
                                     //if (PositionOpen)
                                     //{
                                     //    ApplicationHelper.log(ref tbLog, string.Format("Postiion is currently open. This signal will be skipped."));
@@ -1115,7 +1135,18 @@ namespace TradePlatform
                 {
                     UpdateContractGrid(ApplicationHelper.GC, lastPrice);
                 }
-
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.EUR))
+                {
+                    UpdateContractGrid(ApplicationHelper.EUR, lastPrice);
+                }
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.JPY))
+                {
+                    UpdateContractGrid(ApplicationHelper.JPY, lastPrice);
+                }
+                if (text.ToString().Contains("Ticker Id: " + (int)ApplicationHelper.marketReqID.GBP))
+                {
+                    UpdateContractGrid(ApplicationHelper.GBP, lastPrice);
+                }
 
             }
 
@@ -1324,7 +1355,7 @@ namespace TradePlatform
 
         private void SettingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Setting setting = new Setting(MaxTradesPerDay,StartTradingHour,EndTradingHour, AmibrokerMonitor);
+            Setting setting = new Setting(MaxTradesPerDay,StartTradingHour,EndTradingHour, AmibrokerMonitor, TradeDirection);
 
 
             setting.ShowDialog();
@@ -1334,14 +1365,14 @@ namespace TradePlatform
             MaxTradesPerDay = setting.MaxTradePerDay;
             StartTradingHour = setting.StartTradingHour;
             EndTradingHour = setting.EndTradinghour;
-
+            TradeDirection = setting.TradeDirection;
 
             lbStartTradingHour.Text = StartTradingHour.ToString();
             lbEndTradingHour.Text = EndTradingHour.ToString();
             ApplicationHelper.log(ref tbLog, string.Format("Max Trade Per Day {0}", MaxTradesPerDay), Color.Black);
             ApplicationHelper.log(ref tbLog, string.Format("Start Trading Hour {0}", StartTradingHour), Color.Black);
             ApplicationHelper.log(ref tbLog, string.Format("End Trading Hour {0}", EndTradingHour), Color.Black);
-
+            ApplicationHelper.log(ref tbLog, string.Format("Trade Direction {0}", TradeDirection), Color.Black);
 
         }
 

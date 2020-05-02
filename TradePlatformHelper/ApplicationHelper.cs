@@ -30,6 +30,7 @@ namespace TradePlatformHelper
         public static string STP = "STP";
         public static string STP_PRT= "STP PRT";
         public static string MKT = "MKT";
+        public static string BOTH = "BOTH";
         public static string BUY = "BUY";
         public static string SELL = "SELL";
         public static string SHORT = "SHORT";
@@ -40,6 +41,9 @@ namespace TradePlatformHelper
         public static string RTY = "RTY";
         public static string NQ = "NQ";
         public static string GC = "GC";
+        public static string GBP = "GBP";
+        public static string JPY = "JPY";
+        public static string EUR = "EUR";
         public static string IBContractPath = "IBContract.xml";
         public static string YES = "YES";
         public static string Y = "Y";
@@ -112,7 +116,7 @@ namespace TradePlatformHelper
         private static WMPLib.WindowsMediaPlayer Player = new WMPLib.WindowsMediaPlayer();
         public enum marketReqID : int
         {
-            ES = 1000, MES = 1001, M2K = 1002, MNQ = 1003, NQ = 1004, RTY = 1005, GC = 1006
+            ES = 1000, MES = 1001, M2K = 1002, MNQ = 1003, NQ = 1004, RTY = 1005, GC = 1006, EUR=1007,GBP=1008, JPY=1009
         }
 
         public enum IBContract : int 

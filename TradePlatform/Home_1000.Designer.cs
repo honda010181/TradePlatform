@@ -354,12 +354,12 @@
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(108, 6);
             // 
             // settingToolStripMenuItem
             // 
             this.settingToolStripMenuItem.Name = "settingToolStripMenuItem";
-            this.settingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.settingToolStripMenuItem.Text = "Setting";
             this.settingToolStripMenuItem.Click += new System.EventHandler(this.SettingToolStripMenuItem_Click);
             // 
@@ -419,7 +419,7 @@
             this.dgContract.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgContract.Location = new System.Drawing.Point(875, 351);
             this.dgContract.Name = "dgContract";
-            this.dgContract.Size = new System.Drawing.Size(439, 150);
+            this.dgContract.Size = new System.Drawing.Size(439, 230);
             this.dgContract.TabIndex = 19;
             // 
             // Home_1000

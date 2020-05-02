@@ -35,6 +35,8 @@
             this.dtStartTradingHour = new System.Windows.Forms.DateTimePicker();
             this.dtEndTradingHour = new System.Windows.Forms.DateTimePicker();
             this.cbAmibrokerMonitor = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.cbTradeDirection = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // lbMaxTradePerDay
@@ -105,11 +107,31 @@
             this.cbAmibrokerMonitor.UseVisualStyleBackColor = true;
             this.cbAmibrokerMonitor.CheckedChanged += new System.EventHandler(this.CbAmibrokerMonitor_CheckedChanged);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(41, 226);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(83, 13);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Trade Direction:";
+            // 
+            // cbTradeDirection
+            // 
+            this.cbTradeDirection.FormattingEnabled = true;
+            this.cbTradeDirection.Location = new System.Drawing.Point(163, 217);
+            this.cbTradeDirection.Name = "cbTradeDirection";
+            this.cbTradeDirection.Size = new System.Drawing.Size(121, 21);
+            this.cbTradeDirection.TabIndex = 11;
+            this.cbTradeDirection.SelectedIndexChanged += new System.EventHandler(this.cbTradeDirection_SelectedIndexChanged);
+            // 
             // Setting
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(407, 467);
+            this.Controls.Add(this.cbTradeDirection);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.cbAmibrokerMonitor);
             this.Controls.Add(this.dtEndTradingHour);
             this.Controls.Add(this.dtStartTradingHour);
@@ -133,5 +155,7 @@
         private System.Windows.Forms.DateTimePicker dtStartTradingHour;
         private System.Windows.Forms.DateTimePicker dtEndTradingHour;
         private System.Windows.Forms.CheckBox cbAmibrokerMonitor;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox cbTradeDirection;
     }
 }
